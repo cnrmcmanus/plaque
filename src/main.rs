@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod engine;
+mod flavor;
 mod instruction;
 
 fn main() {
