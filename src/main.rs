@@ -1,3 +1,9 @@
 #![allow(dead_code)]
 
-fn main() {}
+mod engine;
+mod instruction;
+
+fn main() {
+    let engine = engine::Engine::new(vec![]);
+    println!("{:?}", engine);
+}
