@@ -1,4 +1,5 @@
 mod code;
+mod io;
 mod tape;
 
 use tui::{
@@ -38,6 +39,8 @@ pub fn draw<B: Backend>(program: &Program, frame: &mut Frame<B>) {
         )
         .split(window[0]);
 
+    io::render_input(frame, top_panel[0], program);
     code::render(frame, top_panel[1], program);
+    io::render_output(frame, top_panel[2], program);
     tape::render(frame, window[1], program);
 }
