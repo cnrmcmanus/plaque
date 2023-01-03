@@ -1,3 +1,4 @@
+mod code;
 mod tape;
 
 use tui::{
@@ -24,5 +25,19 @@ pub fn draw<B: Backend>(program: &Program, frame: &mut Frame<B>) {
         )
         .split(size);
 
+    let top_panel = Layout::default()
+        .direction(Direction::Horizontal)
+        .margin(0)
+        .constraints(
+            [
+                Constraint::Length(15),
+                Constraint::Min(10),
+                Constraint::Length(15),
+            ]
+            .as_ref(),
+        )
+        .split(window[0]);
+
+    code::render(frame, top_panel[1], program);
     tape::render(frame, window[1], program);
 }

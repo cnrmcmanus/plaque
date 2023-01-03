@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::engine::Engine;
+use crate::engine::{Engine, InstructionPointer};
 use crate::instruction::Instruction;
 
 #[derive(Debug)]
@@ -71,5 +71,12 @@ impl Program {
 
     pub fn undo(&mut self) {
         self.engine.undo().ok();
+    }
+
+    pub fn cursor(&self) -> Option<(usize, usize)> {
+        match self.engine.instruction_pointer {
+            InstructionPointer::Index(i) => Some(self.instruction_positions[i]),
+            _ => None,
+        }
     }
 }
