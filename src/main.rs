@@ -1,4 +1,5 @@
-#![allow(dead_code)]
+#![allow(dead_code, unstable_name_collisions)]
+#![feature(iter_intersperse)]
 
 mod engine;
 mod flavor;
