@@ -40,10 +40,9 @@ fn main() -> Result<()> {
 
     let program_state_ref = Arc::clone(&shared_state);
     thread::spawn(move || loop {
-        let mut guard = program_state_ref.lock().unwrap();
-        let program = &mut guard;
-
-        if let Ok(event) = rx_program.try_recv() {
+        if let Ok(event) = rx_program.recv() {
+            let mut guard = program_state_ref.lock().unwrap();
+            let program = &mut guard;
             match event.code {
                 KeyCode::Right => {
                     program.step();
@@ -54,9 +53,6 @@ fn main() -> Result<()> {
                 _ => {}
             }
         }
-
-        drop(guard);
-        thread::sleep(Duration::from_millis(10));
     });
 
     let stdout = std::io::stdout();
