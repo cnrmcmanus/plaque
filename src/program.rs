@@ -29,6 +29,7 @@ impl Program {
 
         program.set_instructions(instruction_set);
         program.hotload(filename.into())?;
+        program.step();
 
         Ok(program)
     }
