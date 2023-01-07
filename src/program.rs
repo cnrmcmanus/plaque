@@ -49,6 +49,15 @@ impl Program {
         Ok(program)
     }
 
+    pub fn blank(instruction_set: Vec<Instruction>) -> Program {
+        let mut program = Program::new();
+
+        program.set_instructions(instruction_set);
+        program.step();
+
+        program
+    }
+
     pub fn set_instructions(&mut self, instruction_set: Vec<Instruction>) {
         self.instruction_set = HashMap::new();
         for instruction in instruction_set {

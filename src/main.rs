@@ -8,15 +8,19 @@ mod instruction;
 mod program;
 mod ui;
 
+use program::Program;
+
 use anyhow::Result;
 
 fn main() -> Result<()> {
-    let input_filename = std::env::args()
-        .nth(1)
-        .ok_or_else(|| anyhow::Error::msg("missing input filename"))?;
+    let input_filepath = std::env::args().nth(1);
+    let flavor = flavor::overflow::INSTRUCTION_SET.to_vec();
 
-    let mut program =
-        program::Program::load(input_filename, flavor::overflow::INSTRUCTION_SET.to_vec())?;
+    let mut program = match input_filepath {
+        Some(filepath) => Program::load(filepath, flavor)?,
+        None => Program::blank(flavor),
+    };
+
     program.read_stdin();
 
     app::run(program)
