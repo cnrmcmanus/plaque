@@ -1,12 +1,15 @@
 use tui::{
     backend::Backend,
     layout::Rect,
+    style::{Color, Style},
     terminal::Frame,
     text::{Span, Spans, Text},
     widgets::{Block, Borders, Paragraph, Wrap},
 };
 
 use crate::program::Program;
+
+const NEWLINE_COLOR: Color = Color::Rgb(80, 80, 80);
 
 /// Display Input/Output text
 fn io_text(buffer: &[u8]) -> Text {
@@ -18,7 +21,10 @@ fn io_text(buffer: &[u8]) -> Text {
         // add line ending marker B6 to each line except the last
         .map(|(i, line)| {
             if i != newlines {
-                Spans::from(vec![Span::from(line), Span::from("\u{B6}")])
+                Spans::from(vec![
+                    Span::from(line),
+                    Span::styled("\u{B6}", Style::default().fg(NEWLINE_COLOR)),
+                ])
             } else {
                 Spans::from(vec![Span::from(line)])
             }
