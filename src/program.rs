@@ -3,6 +3,7 @@ use crate::instruction::Instruction;
 
 use std::collections::HashMap;
 use std::io::{self, Read};
+use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Mode {
@@ -14,6 +15,7 @@ pub enum Mode {
 pub struct Program {
     pub engine: Engine,
     pub instruction_set: HashMap<char, Instruction>,
+    pub filepath: Option<PathBuf>,
     pub code_lines: Vec<String>,
     pub instruction_positions: Vec<(usize, usize)>,
     pub mode: Mode,
@@ -25,6 +27,7 @@ impl Program {
         Program {
             engine: Engine::new(vec![]),
             instruction_set: HashMap::new(),
+            filepath: None,
             code_lines: vec![],
             instruction_positions: vec![],
             mode: Mode::Interactive,
@@ -35,11 +38,12 @@ impl Program {
     pub fn load<S: Into<String>>(
         filename: S,
         instruction_set: Vec<Instruction>,
-    ) -> Result<Program, std::io::Error> {
+    ) -> io::Result<Program> {
         let mut program = Program::new();
 
         program.set_instructions(instruction_set);
-        program.hotload(filename.into())?;
+        program.filepath = Some(PathBuf::from(filename.into()));
+        program.hotload()?;
         program.step();
 
         Ok(program)
@@ -56,8 +60,9 @@ impl Program {
         self.instruction_set.get(&character).copied()
     }
 
-    pub fn hotload<S: Into<String>>(&mut self, filename: S) -> Result<(), std::io::Error> {
-        let code_text = std::fs::read_to_string(filename.into())?;
+    pub fn hotload(&mut self) -> io::Result<()> {
+        let path = self.filepath.as_ref().ok_or(io::ErrorKind::NotFound)?;
+        let code_text = std::fs::read_to_string(path)?;
         self.code_lines = code_text
             .lines()
             .map(|line| line.to_string())
