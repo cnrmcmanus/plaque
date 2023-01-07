@@ -2,7 +2,7 @@ use crate::program::{Mode, Program};
 use crate::ui;
 
 use anyhow::Result;
-use crossterm::event::{self, Event as CEvent, KeyCode, KeyEvent};
+use crossterm::event::{self, Event as CEvent, KeyCode, KeyEvent, KeyModifiers};
 use std::sync::{
     mpsc,
     mpsc::{Receiver, Sender},
@@ -58,8 +58,18 @@ pub fn spawn_program_thread(
                     _ => {}
                 },
                 Mode::Input => match event.code {
+                    KeyCode::Char(c) => {
+                        program.add_input(c);
+                    }
+                    KeyCode::Enter => {
+                        if event.modifiers.contains(KeyModifiers::SHIFT) {
+                            program.add_input('\n');
+                        } else {
+                            program.exit_input_mode(true);
+                        }
+                    }
                     _ => {}
-                }
+                },
             };
         }
     });

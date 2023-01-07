@@ -7,7 +7,7 @@ use tui::{
     widgets::{Block, Borders, Paragraph, Wrap},
 };
 
-use crate::program::Program;
+use crate::program::{Mode, Program};
 
 const NEWLINE_COLOR: Color = Color::Rgb(80, 80, 80);
 
@@ -35,7 +35,11 @@ fn io_text(buffer: &[u8]) -> Text {
 }
 
 pub fn render_input<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
-    let input = Paragraph::new(io_text(&program.engine.input))
+    let text = match program.mode {
+        Mode::Input => &program.input_buffer,
+        _ => &program.engine.input,
+    };
+    let input = Paragraph::new(io_text(text))
         .block(Block::default().title("Input").borders(Borders::ALL))
         .wrap(Wrap { trim: false });
 

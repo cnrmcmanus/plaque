@@ -1,4 +1,4 @@
-use crate::engine::{Engine, InstructionPointer};
+use crate::engine::{Engine, Exception, InstructionPointer};
 use crate::instruction::Instruction;
 
 use std::collections::HashMap;
@@ -17,6 +17,7 @@ pub struct Program {
     pub code_lines: Vec<String>,
     pub instruction_positions: Vec<(usize, usize)>,
     pub mode: Mode,
+    pub input_buffer: Vec<u8>,
 }
 
 impl Program {
@@ -27,6 +28,7 @@ impl Program {
             code_lines: vec![],
             instruction_positions: vec![],
             mode: Mode::Interactive,
+            input_buffer: vec![],
         }
     }
 
@@ -75,7 +77,14 @@ impl Program {
     }
 
     pub fn step(&mut self) {
-        self.engine.step().ok();
+        if let Err(exception) = self.engine.step() {
+            match exception {
+                Exception::Error(_) => {}
+                Exception::RequestingInput => {
+                    self.enter_input_mode();
+                }
+            }
+        }
     }
 
     pub fn undo(&mut self) {
@@ -100,6 +109,25 @@ impl Program {
             .bytes()
             .map(|x| x.unwrap_or_default())
             .collect::<Vec<_>>();
+    }
+
+    pub fn enter_input_mode(&mut self) {
+        self.mode = Mode::Input;
+        self.input_buffer = self.engine.input.clone();
+    }
+
+    pub fn exit_input_mode(&mut self, commit: bool) {
+        self.mode = Mode::Interactive;
+        if commit {
+            self.engine.input = self.input_buffer.clone();
+        }
+        self.input_buffer = vec![];
+    }
+
+    pub fn add_input(&mut self, c: char) {
+        if c.is_ascii() {
+            self.input_buffer.push(c as u8);
+        }
     }
 
     pub fn cursor(&self) -> Option<(usize, usize)> {
