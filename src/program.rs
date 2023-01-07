@@ -3,12 +3,19 @@ use std::collections::HashMap;
 use crate::engine::{Engine, InstructionPointer};
 use crate::instruction::Instruction;
 
+#[derive(Clone, Copy, Debug)]
+pub enum Mode {
+    Interactive,
+    Input,
+}
+
 #[derive(Debug)]
 pub struct Program {
     pub engine: Engine,
     pub instruction_set: HashMap<char, Instruction>,
     pub code_lines: Vec<String>,
     pub instruction_positions: Vec<(usize, usize)>,
+    pub mode: Mode,
 }
 
 impl Program {
@@ -18,6 +25,7 @@ impl Program {
             instruction_set: HashMap::new(),
             code_lines: vec![],
             instruction_positions: vec![],
+            mode: Mode::Interactive,
         }
     }
 

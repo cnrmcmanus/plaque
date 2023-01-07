@@ -1,4 +1,5 @@
 mod code;
+mod help;
 mod io;
 mod tape;
 
@@ -43,4 +44,5 @@ pub fn draw<B: Backend>(program: &Program, frame: &mut Frame<B>) {
     code::render(frame, top_panel[1], program);
     io::render_output(frame, top_panel[2], program);
     tape::render(frame, window[1], program);
+    help::render(frame, window[2], program.mode);
 }
