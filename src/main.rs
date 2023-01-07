@@ -17,8 +17,9 @@ fn main() -> Result<()> {
         .nth(1)
         .ok_or_else(|| anyhow::Error::msg("missing input filename"))?;
 
-    let program =
+    let mut program =
         program::Program::load(input_filename, flavor::overflow::INSTRUCTION_SET.to_vec())?;
+    program.read_stdin();
 
     app::run(program)
 }

@@ -1,7 +1,8 @@
-use std::collections::HashMap;
-
 use crate::engine::{Engine, InstructionPointer};
 use crate::instruction::Instruction;
+
+use std::collections::HashMap;
+use std::io::{self, Read};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Mode {
@@ -87,6 +88,18 @@ impl Program {
 
     pub fn is_input_mode(&self) -> bool {
         self.mode == Mode::Input
+    }
+
+    pub fn read_stdin(&mut self) {
+        if atty::is(atty::Stream::Stdin) {
+            return;
+        }
+
+        self.engine.input = io::stdin()
+            .lock()
+            .bytes()
+            .map(|x| x.unwrap_or_default())
+            .collect::<Vec<_>>();
     }
 
     pub fn cursor(&self) -> Option<(usize, usize)> {
