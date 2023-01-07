@@ -80,6 +80,8 @@ pub fn ui_loop(shared_state: SharedState, rx_ui: Receiver<()>) -> Result<()> {
     let stdout = std::io::stdout();
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
+
+    crossterm::terminal::enable_raw_mode()?;
     terminal.clear()?;
 
     loop {

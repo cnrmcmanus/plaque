@@ -11,8 +11,6 @@ mod ui;
 use anyhow::Result;
 
 fn main() -> Result<()> {
-    crossterm::terminal::enable_raw_mode()?;
-
     let input_filename = std::env::args()
         .nth(1)
         .ok_or_else(|| anyhow::Error::msg("missing input filename"))?;
