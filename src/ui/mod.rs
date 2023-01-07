@@ -30,19 +30,18 @@ pub fn draw<B: Backend>(program: &Program, frame: &mut Frame<B>) {
     let top_panel = Layout::default()
         .direction(Direction::Horizontal)
         .margin(0)
-        .constraints(
-            [
-                Constraint::Length(15),
-                Constraint::Min(10),
-                Constraint::Length(15),
-            ]
-            .as_ref(),
-        )
+        .constraints([Constraint::Min(10), Constraint::Length(30)].as_ref())
         .split(window[0]);
 
-    io::render_input(frame, top_panel[0], program);
-    code::render(frame, top_panel[1], program);
-    io::render_output(frame, top_panel[2], program);
+    let io_panel = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(0)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .split(top_panel[1]);
+
+    code::render(frame, top_panel[0], program);
+    io::render_output(frame, io_panel[0], program);
+    io::render_input(frame, io_panel[1], program);
     tape::render(frame, window[1], program);
     help::render(frame, window[2], program.mode);
 }
