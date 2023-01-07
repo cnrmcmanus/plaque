@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::engine::{Engine, InstructionPointer};
 use crate::instruction::Instruction;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Mode {
     Interactive,
     Input,
@@ -79,6 +79,14 @@ impl Program {
 
     pub fn undo(&mut self) {
         self.engine.undo().ok();
+    }
+
+    pub fn is_interactive_mode(&self) -> bool {
+        self.mode == Mode::Interactive
+    }
+
+    pub fn is_input_mode(&self) -> bool {
+        self.mode == Mode::Input
     }
 
     pub fn cursor(&self) -> Option<(usize, usize)> {

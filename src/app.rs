@@ -16,32 +16,38 @@ type SharedState = Arc<Mutex<Program>>;
 
 pub fn run(program: Program) -> Result<()> {
     let shared_state = Arc::new(Mutex::new(program));
-    let (tx_ui, rx_ui) = mpsc::channel::<KeyEvent>();
     let (tx_program, rx_program) = mpsc::channel::<KeyEvent>();
+    let (tx_ui, rx_ui) = mpsc::channel::<()>();
 
-    spawn_input_thread(tx_ui, tx_program);
-    spawn_program_thread(shared_state.clone(), rx_program);
+    spawn_input_thread(tx_program);
+    spawn_program_thread(shared_state.clone(), rx_program, tx_ui);
     ui_loop(shared_state, rx_ui)
 }
 
-pub fn spawn_input_thread(tx_ui: Sender<KeyEvent>, tx_program: Sender<KeyEvent>) {
+pub fn spawn_input_thread(tx_program: Sender<KeyEvent>) {
     let tick_rate = Duration::from_millis(50);
     thread::spawn(move || loop {
         if event::poll(tick_rate).unwrap() {
             if let CEvent::Key(key) = event::read().unwrap() {
-                tx_ui.send(key).unwrap();
                 tx_program.send(key).unwrap();
             }
         }
     });
 }
 
-pub fn spawn_program_thread(shared_state: SharedState, rx_program: Receiver<KeyEvent>) {
+pub fn spawn_program_thread(
+    shared_state: SharedState,
+    rx_program: Receiver<KeyEvent>,
+    tx_ui: Sender<()>,
+) {
     thread::spawn(move || loop {
         if let Ok(event) = rx_program.recv() {
             let mut guard = shared_state.lock().unwrap();
             let program = &mut guard;
             match event.code {
+                KeyCode::Char('q') if program.is_interactive_mode() => {
+                    tx_ui.send(()).unwrap();
+                }
                 KeyCode::Right => {
                     program.step();
                 }
@@ -54,7 +60,7 @@ pub fn spawn_program_thread(shared_state: SharedState, rx_program: Receiver<KeyE
     });
 }
 
-pub fn ui_loop(shared_state: SharedState, rx_ui: Receiver<KeyEvent>) -> Result<()> {
+pub fn ui_loop(shared_state: SharedState, rx_ui: Receiver<()>) -> Result<()> {
     let tick_rate = Duration::from_millis(10);
     let stdout = std::io::stdout();
     let backend = CrosstermBackend::new(stdout);
@@ -68,10 +74,8 @@ pub fn ui_loop(shared_state: SharedState, rx_ui: Receiver<KeyEvent>) -> Result<(
             drop(guard);
         })?;
 
-        if let Ok(event) = rx_ui.try_recv() {
-            if let KeyCode::Char('q') = event.code {
-                break;
-            }
+        if let Ok(()) = rx_ui.try_recv() {
+            break;
         }
 
         thread::sleep(tick_rate);
