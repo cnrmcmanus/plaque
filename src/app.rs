@@ -1,4 +1,4 @@
-use crate::program::Program;
+use crate::program::{Mode, Program};
 use crate::ui;
 
 use anyhow::Result;
@@ -44,18 +44,23 @@ pub fn spawn_program_thread(
         if let Ok(event) = rx_program.recv() {
             let mut guard = shared_state.lock().unwrap();
             let program = &mut guard;
-            match event.code {
-                KeyCode::Char('q') if program.is_interactive_mode() => {
-                    tx_ui.send(()).unwrap();
+            match program.mode {
+                Mode::Interactive => match event.code {
+                    KeyCode::Char('q') => {
+                        tx_ui.send(()).unwrap();
+                    }
+                    KeyCode::Right => {
+                        program.step();
+                    }
+                    KeyCode::Left => {
+                        program.undo();
+                    }
+                    _ => {}
+                },
+                Mode::Input => match event.code {
+                    _ => {}
                 }
-                KeyCode::Right => {
-                    program.step();
-                }
-                KeyCode::Left => {
-                    program.undo();
-                }
-                _ => {}
-            }
+            };
         }
     });
 }
