@@ -74,7 +74,7 @@ pub const OUTPUT: Instruction = Instruction {
 pub const INPUT: Instruction = Instruction {
     symbol: ',',
 
-    exec: |program| match program.input.pop() {
+    exec: |program| match program.pop_input() {
         None => Exception::RequestingInput.result(),
         Some(input) => {
             let cell = program.cell();
@@ -89,7 +89,7 @@ pub const INPUT: Instruction = Instruction {
         Some(cell) => {
             let input = program.cell();
             program.set_cell(cell);
-            program.input.push(input);
+            program.push_input(input);
             program.prev_instruction()
         }
     },

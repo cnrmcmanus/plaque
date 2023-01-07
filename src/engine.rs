@@ -206,6 +206,18 @@ impl Engine {
         self.set_cell(f(value));
     }
 
+    pub fn pop_input(&mut self) -> Option<u8> {
+        let head = self.input.first().cloned();
+        if head.is_some() {
+            self.input.remove(0);
+        }
+        head
+    }
+
+    pub fn push_input(&mut self, head: u8) {
+        self.input.insert(0, head);
+    }
+
     pub fn input(&mut self, buffered: &mut Vec<u8>) {
         let mut input = vec![];
         input.append(buffered);
