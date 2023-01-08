@@ -44,6 +44,7 @@ pub fn spawn_program_thread(
         if let Ok(event) = rx_program.recv() {
             let mut guard = shared_state.lock().unwrap();
             let program = &mut guard;
+
             match program.mode {
                 Mode::Interactive => match event.code {
                     KeyCode::Char('q') => {
@@ -57,6 +58,7 @@ pub fn spawn_program_thread(
                     }
                     _ => {}
                 },
+                Mode::Editor => {}
                 Mode::Input => match event.code {
                     KeyCode::Char(c) => {
                         program.add_input(c);

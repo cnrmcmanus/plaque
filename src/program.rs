@@ -8,6 +8,7 @@ use std::path::PathBuf;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Mode {
     Interactive,
+    Editor,
     Input,
 }
 
@@ -15,8 +16,7 @@ pub enum Mode {
 pub struct Program {
     pub engine: Engine,
     pub instruction_set: HashMap<char, Instruction>,
-    pub filepath: Option<PathBuf>,
-    pub code_lines: Vec<String>,
+    pub editor: Editor,
     pub instruction_positions: Vec<(usize, usize)>,
     pub mode: Mode,
     pub input_buffer: Vec<u8>,
@@ -28,8 +28,7 @@ impl Program {
         Program {
             engine: Engine::new(vec![]),
             instruction_set: HashMap::new(),
-            filepath: None,
-            code_lines: vec![],
+            editor: Editor::new(),
             instruction_positions: vec![],
             mode: Mode::Interactive,
             input_buffer: vec![],
@@ -44,7 +43,7 @@ impl Program {
         let mut program = Program::new();
 
         program.set_instructions(instruction_set);
-        program.filepath = Some(PathBuf::from(filename.into()));
+        program.editor.filepath = Some(PathBuf::from(filename.into()));
         program.hotload()?;
         program.step();
 
@@ -67,21 +66,25 @@ impl Program {
         }
     }
 
-    pub fn read_char(&self, character: char) -> Option<Instruction> {
+    pub fn read_instruction(&self, character: char) -> Option<Instruction> {
         self.instruction_set.get(&character).copied()
     }
 
     pub fn hotload(&mut self) -> io::Result<()> {
-        let path = self.filepath.as_ref().ok_or(io::ErrorKind::NotFound)?;
+        let path = self
+            .editor
+            .filepath
+            .as_ref()
+            .ok_or(io::ErrorKind::NotFound)?;
         let code_text = std::fs::read_to_string(path)?;
-        self.code_lines = code_text
+        self.editor.lines = code_text
             .lines()
             .map(|line| line.to_string())
             .collect::<Vec<String>>();
 
-        for (line_number, line) in self.code_lines.iter().enumerate() {
+        for (line_number, line) in self.editor.lines.iter().enumerate() {
             for (column_number, character) in line.chars().enumerate() {
-                if let Some(instruction) = self.read_char(character) {
+                if let Some(instruction) = self.read_instruction(character) {
                     self.engine.instructions.push(instruction);
                     self.instruction_positions
                         .push((line_number, column_number));
@@ -150,6 +153,33 @@ impl Program {
         match self.engine.instruction_pointer {
             InstructionPointer::Index(i) => Some(self.instruction_positions[i]),
             _ => None,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Editor {
+    pub filepath: Option<PathBuf>,
+    pub lines: Vec<String>,
+    pub history: Vec<EditorCommand>,
+    pub history_position: usize,
+    pub cursor: (usize, usize),
+}
+
+#[derive(Debug)]
+pub enum EditorCommand {
+    Insert(char, (usize, usize)),
+    Delete(char, (usize, usize)),
+}
+
+impl Editor {
+    pub fn new() -> Editor {
+        Editor {
+            filepath: None,
+            lines: vec![],
+            history: vec![],
+            history_position: 0,
+            cursor: (0, 0),
         }
     }
 }

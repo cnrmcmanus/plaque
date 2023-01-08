@@ -45,6 +45,7 @@ pub fn draw<B: Backend>(program: &Program, frame: &mut Frame<B>) {
 
 fn render_filename<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
     let filename = program
+        .editor
         .filepath
         .as_ref()
         .and_then(|path| path.file_name())

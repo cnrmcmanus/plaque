@@ -15,7 +15,8 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
     let comment_style = Style::default().fg(Color::Rgb(150, 150, 150));
 
     let text = program
-        .code_lines
+        .editor
+        .lines
         .iter()
         .enumerate()
         .map(|(i, line)| {

@@ -40,6 +40,7 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
         "Help ({})",
         match mode {
             Mode::Interactive => "interactive mode",
+            Mode::Editor => "editor mode",
             Mode::Input => "input mode",
         }
     );
@@ -53,6 +54,7 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
             HelpItem::new("x", "Reset"),
             HelpItem::new("q", "Quit"),
         ],
+        Mode::Editor => vec![],
         Mode::Input => vec![
             HelpItem::new("enter", "Submit"),
             HelpItem::new("shift+enter", "Newline"),
