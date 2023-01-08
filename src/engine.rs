@@ -198,9 +198,12 @@ impl Engine {
     }
 
     pub fn prev_cell(&mut self) -> EngineResult {
-        self.tape_pointer -= 1;
-
-        Ok(())
+        if self.tape_pointer != 0 {
+            self.tape_pointer -= 1;
+            Ok(())
+        } else {
+            Exception::error("can't decrement intruction pointer: already at first instruction").result()
+        }
     }
 
     pub fn cell(&self) -> u8 {
