@@ -47,6 +47,9 @@ pub fn spawn_program_thread(
 
             match program.mode {
                 Mode::Interactive => match event.code {
+                    KeyCode::Char('e') => {
+                        program.mode = Mode::Editor;
+                    }
                     KeyCode::Char('q') => {
                         tx_ui.send(()).unwrap();
                     }
@@ -58,7 +61,12 @@ pub fn spawn_program_thread(
                     }
                     _ => {}
                 },
-                Mode::Editor => {}
+                Mode::Editor => match event.code {
+                    KeyCode::Esc => {
+                        program.mode = Mode::Interactive;
+                    }
+                    _ => {}
+                },
                 Mode::Input => match event.code {
                     KeyCode::Char(c) => {
                         program.add_input(c);

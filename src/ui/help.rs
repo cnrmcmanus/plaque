@@ -50,11 +50,11 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
             HelpItem::new("right", "Step"),
             HelpItem::new("left", "Undo"),
             HelpItem::new("space", "Play/Pause"),
-            HelpItem::new("r", "Hot Reload"),
+            HelpItem::new("e", "Editor Mode"),
             HelpItem::new("x", "Reset"),
             HelpItem::new("q", "Quit"),
         ],
-        Mode::Editor => vec![],
+        Mode::Editor => vec![HelpItem::new("esc", "Done")],
         Mode::Input => vec![
             HelpItem::new("enter", "Submit"),
             HelpItem::new("shift+enter", "Newline"),
