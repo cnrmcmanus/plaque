@@ -89,6 +89,16 @@ impl Engine {
         })
     }
 
+    pub fn reset(&mut self) {
+        self.tape = vec![0];
+        self.tape_pointer = 0;
+        self.instruction_pointer = InstructionPointer::Start;
+        self.history = vec![];
+        self.output = vec![];
+        self.input = vec![];
+        self.input_cell_history = vec![];
+    }
+
     pub fn current_instruction(&self) -> Option<Instruction> {
         match self.instruction_pointer {
             InstructionPointer::Start => None,

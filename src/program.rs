@@ -20,6 +20,7 @@ pub struct Program {
     pub instruction_positions: Vec<(usize, usize)>,
     pub mode: Mode,
     pub input_buffer: Vec<u8>,
+    pub stdin: Option<Vec<u8>>,
     pub debug_messages: Vec<String>,
 }
 
@@ -32,6 +33,7 @@ impl Program {
             instruction_positions: vec![],
             mode: Mode::Interactive,
             input_buffer: vec![],
+            stdin: None,
             debug_messages: vec![],
         }
     }
@@ -110,6 +112,14 @@ impl Program {
         self.engine.undo().ok();
     }
 
+    pub fn reset(&mut self) {
+        self.engine.reset();
+        if let Some(stdin) = &self.stdin {
+            self.engine.input = stdin.clone();
+        }
+        self.step();
+    }
+
     pub fn is_interactive_mode(&self) -> bool {
         self.mode == Mode::Interactive
     }
@@ -119,15 +129,17 @@ impl Program {
     }
 
     pub fn read_stdin(&mut self) {
-        if atty::is(atty::Stream::Stdin) {
-            return;
-        }
-
-        self.engine.input = io::stdin()
-            .lock()
-            .bytes()
-            .map(|x| x.unwrap_or_default())
-            .collect::<Vec<_>>();
+        self.stdin = if atty::isnt(atty::Stream::Stdin) {
+            let stdin = io::stdin()
+                .lock()
+                .bytes()
+                .map(|x| x.unwrap_or_default())
+                .collect::<Vec<_>>();
+            self.engine.input = stdin.clone();
+            Some(stdin)
+        } else {
+            None
+        };
     }
 
     pub fn enter_input_mode(&mut self) {

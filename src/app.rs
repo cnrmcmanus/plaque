@@ -50,6 +50,9 @@ pub fn spawn_program_thread(
                     KeyCode::Char('e') => {
                         program.mode = Mode::Editor;
                     }
+                    KeyCode::Char('x') => {
+                        program.reset();
+                    }
                     KeyCode::Char('q') => {
                         tx_ui.send(()).unwrap();
                     }
