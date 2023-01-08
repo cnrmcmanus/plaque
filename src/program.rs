@@ -100,7 +100,9 @@ impl Program {
     pub fn step(&mut self) {
         if let Err(exception) = self.engine.step() {
             match exception {
-                Exception::Error(_) => {}
+                Exception::Error(message) => {
+                    self.debug_messages.push(message);
+                }
                 Exception::RequestingInput => {
                     self.enter_input_mode();
                 }
