@@ -1,4 +1,4 @@
-mod code;
+mod editor;
 mod help;
 mod io;
 mod tape;
@@ -37,7 +37,7 @@ pub fn draw<B: Backend>(program: &Program, frame: &mut Frame<B>) {
         .split(window[1]);
 
     render_filename(frame, window[0], program);
-    code::render(frame, top_panel[0], program);
+    editor::render(frame, top_panel[0], program);
     io::render(frame, top_panel[1], program);
     tape::render(frame, window[2], program);
     help::render(frame, window[3], program.mode);

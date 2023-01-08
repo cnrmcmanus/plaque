@@ -39,7 +39,7 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
         .collect::<Vec<_>>();
 
     let program =
-        Paragraph::new(text).block(Block::default().title("Program").borders(Borders::ALL));
+        Paragraph::new(text).block(Block::default().title("Editor").borders(Borders::ALL));
 
     frame.render_widget(program, area);
 }
