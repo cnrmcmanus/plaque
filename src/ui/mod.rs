@@ -36,16 +36,9 @@ pub fn draw<B: Backend>(program: &Program, frame: &mut Frame<B>) {
         .constraints([Constraint::Min(10), Constraint::Length(30)].as_ref())
         .split(window[1]);
 
-    let io_panel = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(0)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-        .split(top_panel[1]);
-
     render_filename(frame, window[0], program);
     code::render(frame, top_panel[0], program);
-    io::render_output(frame, io_panel[0], program);
-    io::render_input(frame, io_panel[1], program);
+    io::render(frame, top_panel[1], program);
     tape::render(frame, window[2], program);
     help::render(frame, window[3], program.mode);
 }

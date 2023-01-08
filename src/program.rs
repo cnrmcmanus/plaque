@@ -20,6 +20,7 @@ pub struct Program {
     pub instruction_positions: Vec<(usize, usize)>,
     pub mode: Mode,
     pub input_buffer: Vec<u8>,
+    pub debug_messages: Vec<String>,
 }
 
 impl Program {
@@ -32,6 +33,7 @@ impl Program {
             instruction_positions: vec![],
             mode: Mode::Interactive,
             input_buffer: vec![],
+            debug_messages: vec![],
         }
     }
 
