@@ -30,6 +30,12 @@ impl Editor {
         self.lines[i].chars().count()
     }
 
+    pub fn insert_char(&mut self, c: char) {
+        let (row, col) = self.cursor;
+        self.lines[row].insert(col, c);
+        self.cursor = (row, col + 1);
+    }
+
     pub fn move_cursor(&mut self, cursor_move: CursorMove) {
         let (row, col) = self.cursor;
         match cursor_move {

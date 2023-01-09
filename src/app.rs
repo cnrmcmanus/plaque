@@ -68,6 +68,10 @@ pub fn spawn_program_thread(
                     _ => {}
                 },
                 Mode::Editor => match event.code {
+                    KeyCode::Char(c) => {
+                        program.editor.insert_char(c);
+                        program.index_instructions();
+                    }
                     KeyCode::Up => program.editor.move_cursor(editor::CursorMove::Up),
                     KeyCode::Down => program.editor.move_cursor(editor::CursorMove::Down),
                     KeyCode::Left => program.editor.move_cursor(editor::CursorMove::Left),

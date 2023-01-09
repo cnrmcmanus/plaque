@@ -84,6 +84,14 @@ impl Program {
             .lines()
             .map(|line| line.to_string())
             .collect::<Vec<String>>();
+        self.index_instructions();
+
+        Ok(())
+    }
+
+    pub fn index_instructions(&mut self) {
+        self.engine.instructions = vec![];
+        self.instruction_positions = vec![];
 
         for (line_number, line) in self.editor.lines.iter().enumerate() {
             for (column_number, character) in line.chars().enumerate() {
@@ -94,8 +102,6 @@ impl Program {
                 }
             }
         }
-
-        Ok(())
     }
 
     pub fn step(&mut self) {
