@@ -1,3 +1,4 @@
+use crate::editor::Editor;
 use crate::engine::{Engine, Exception, InstructionPointer};
 use crate::instruction::Instruction;
 
@@ -167,33 +168,6 @@ impl Program {
         match self.engine.instruction_pointer {
             InstructionPointer::Index(i) => Some(self.instruction_positions[i]),
             _ => None,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct Editor {
-    pub filepath: Option<PathBuf>,
-    pub lines: Vec<String>,
-    pub history: Vec<EditorCommand>,
-    pub history_position: usize,
-    pub cursor: (usize, usize),
-}
-
-#[derive(Debug)]
-pub enum EditorCommand {
-    Insert(char, (usize, usize)),
-    Delete(char, (usize, usize)),
-}
-
-impl Editor {
-    pub fn new() -> Editor {
-        Editor {
-            filepath: None,
-            lines: vec![],
-            history: vec![],
-            history_position: 0,
-            cursor: (0, 0),
         }
     }
 }

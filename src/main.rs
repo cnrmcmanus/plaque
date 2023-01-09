@@ -2,6 +2,7 @@
 #![feature(iter_intersperse)]
 
 mod app;
+mod editor;
 mod engine;
 mod flavor;
 mod instruction;
