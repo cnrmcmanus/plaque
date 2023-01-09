@@ -36,6 +36,21 @@ impl Editor {
         self.cursor = (row, col + 1);
     }
 
+    pub fn backward_delete(&mut self) {
+        let (row, col) = self.cursor;
+        if col > 0 {
+            self.lines[row].remove(col - 1);
+            self.cursor = (row, col - 1);
+        } else if row > 0 {
+            let line = self.lines[row].clone();
+            let prev_line_len = self.line_chars(row - 1);
+
+            self.lines.remove(row);
+            self.lines[row - 1] += &line;
+            self.cursor = (row - 1, prev_line_len);
+        }
+    }
+
     pub fn move_cursor(&mut self, cursor_move: CursorMove) {
         let (row, col) = self.cursor;
         match cursor_move {

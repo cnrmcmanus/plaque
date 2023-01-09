@@ -57,6 +57,7 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
         Mode::Editor => vec![
             HelpItem::new("esc", "Done"),
             HelpItem::new("↑↓←→", "Move Cursor"),
+            HelpItem::new("bksp", "Backward Delete"),
         ],
         Mode::Input => vec![
             HelpItem::new("enter", "Submit"),
