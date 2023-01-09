@@ -1,3 +1,4 @@
+use crate::editor;
 use crate::program::{Mode, Program};
 use crate::ui;
 
@@ -65,6 +66,10 @@ pub fn spawn_program_thread(
                     _ => {}
                 },
                 Mode::Editor => match event.code {
+                    KeyCode::Up => program.editor.move_cursor(editor::CursorMove::Up),
+                    KeyCode::Down => program.editor.move_cursor(editor::CursorMove::Down),
+                    KeyCode::Left => program.editor.move_cursor(editor::CursorMove::Left),
+                    KeyCode::Right => program.editor.move_cursor(editor::CursorMove::Right),
                     KeyCode::Esc => {
                         program.mode = Mode::Interactive;
                     }

@@ -127,6 +127,10 @@ impl Program {
         self.mode == Mode::Interactive
     }
 
+    pub fn is_editor_mode(&self) -> bool {
+        self.mode == Mode::Editor
+    }
+
     pub fn is_input_mode(&self) -> bool {
         self.mode == Mode::Input
     }
