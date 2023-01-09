@@ -36,6 +36,14 @@ impl Editor {
         self.cursor = (row, col + 1);
     }
 
+    pub fn newline(&mut self) {
+        let (row, col) = self.cursor;
+        let line: String = self.lines[row].chars().skip(col).collect();
+        self.lines[row].truncate(col);
+        self.lines.insert(row + 1, line);
+        self.cursor = (row + 1, 0);
+    }
+
     pub fn backward_delete(&mut self) {
         let (row, col) = self.cursor;
         if col > 0 {

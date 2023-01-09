@@ -72,6 +72,10 @@ pub fn spawn_program_thread(
                         program.editor.insert_char(c);
                         program.index_instructions();
                     }
+                    KeyCode::Enter => {
+                        program.editor.newline();
+                        program.index_instructions();
+                    }
                     KeyCode::Backspace => {
                         program.editor.backward_delete();
                         program.index_instructions();
