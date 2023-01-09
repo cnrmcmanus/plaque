@@ -202,7 +202,8 @@ impl Engine {
             self.tape_pointer -= 1;
             Ok(())
         } else {
-            Exception::error("can't decrement intruction pointer: already at first instruction").result()
+            Exception::error("can't decrement intruction pointer: already at first instruction")
+                .result()
         }
     }
 

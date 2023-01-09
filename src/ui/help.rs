@@ -24,10 +24,10 @@ impl HelpItem<'_> {
         Cell::from(Spans::from(vec![
             Span::from(" "),
             Span::from(self.hotkey),
-            Span::from(" ".repeat(hotkey_width - self.hotkey.len())),
+            Span::from(" ".repeat(hotkey_width - self.hotkey.chars().count())),
             Span::from(" = "),
             Span::from(self.label),
-            Span::from(" ".repeat(label_width - self.label.len())),
+            Span::from(" ".repeat(label_width - self.label.chars().count())),
             Span::from(" "),
         ]))
     }
@@ -63,8 +63,8 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
 
     let (hotkey_width, label_width) = help_items.iter().fold((0, 0), |accum, item| {
         (
-            max(accum.0, item.hotkey.len()),
-            max(accum.1, item.label.len()),
+            max(accum.0, item.hotkey.chars().count()),
+            max(accum.1, item.label.chars().count()),
         )
     });
     let columns = help_items.len().next_multiple_of(&height);
