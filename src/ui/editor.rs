@@ -1,3 +1,4 @@
+use std::iter;
 use tui::{
     backend::Backend,
     layout::Rect,
@@ -10,6 +11,9 @@ use tui::{
 use crate::program::Program;
 
 pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
+    let cursor_style = Style::default()
+        .bg(Color::Rgb(200, 200, 200))
+        .fg(Color::Rgb(50, 50, 50));
     let focused_code_style = Style::default().add_modifier(Modifier::UNDERLINED);
     let code_style = Style::default();
     let comment_style = Style::default().fg(Color::Rgb(150, 150, 150));
@@ -22,19 +26,28 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
         .iter()
         .enumerate()
         .map(|(i, line)| {
-            let spans = std::iter::once(Span::styled(
+            let spans = iter::once(Span::styled(
                 format!("{:0>line_count_digits$} ", i + 1),
                 comment_style,
             ))
-            .chain(line.chars().enumerate().map(|(j, chr)| {
-                if program.cursor() == Some((i, j)) {
-                    Span::styled(chr.to_string(), focused_code_style)
-                } else if program.instruction_positions.contains(&(i, j)) {
-                    Span::styled(chr.to_string(), code_style)
-                } else {
-                    Span::styled(chr.to_string(), comment_style)
-                }
-            }))
+            .chain(
+                line.chars()
+                    .chain(iter::once(' '))
+                    .enumerate()
+                    .map(|(j, chr)| {
+                        let style = if program.is_editor_mode() && program.editor.cursor == (i, j) {
+                            cursor_style
+                        } else if program.cursor() == Some((i, j)) {
+                            focused_code_style
+                        } else if program.instruction_positions.contains(&(i, j)) {
+                            code_style
+                        } else {
+                            comment_style
+                        };
+
+                        Span::styled(chr.to_string(), style)
+                    }),
+            )
             .collect::<Vec<_>>();
 
             Spans::from(spans)
