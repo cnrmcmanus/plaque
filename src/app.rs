@@ -4,6 +4,8 @@ use crate::ui;
 
 use anyhow::Result;
 use crossterm::event::{self, Event as CEvent, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::execute;
+use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use std::sync::{
     mpsc,
     mpsc::{Receiver, Sender},
@@ -95,12 +97,12 @@ pub fn spawn_program_thread(
 
 pub fn ui_loop(shared_state: SharedState, rx_ui: Receiver<()>) -> Result<()> {
     let tick_rate = Duration::from_millis(10);
-    let stdout = std::io::stdout();
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let mut stdout = std::io::stdout();
 
     crossterm::terminal::enable_raw_mode()?;
-    terminal.clear()?;
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
 
     loop {
         terminal.draw(|frame| {
@@ -117,8 +119,8 @@ pub fn ui_loop(shared_state: SharedState, rx_ui: Receiver<()>) -> Result<()> {
     }
 
     crossterm::terminal::disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
-    terminal.clear()?;
 
     Ok(())
 }
