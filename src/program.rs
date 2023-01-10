@@ -1,10 +1,11 @@
 use crate::editor::Editor;
-use crate::engine::{Engine, Exception, InstructionPointer};
+use crate::engine::{Engine, EngineResult, Exception, InstructionPointer};
 use crate::instruction::Instruction;
 
 use std::collections::HashMap;
 use std::io::{self, Read};
 use std::path::PathBuf;
+use tap::prelude::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Mode {
@@ -48,7 +49,7 @@ impl Program {
         program.set_instructions(instruction_set);
         program.editor.filepath = Some(PathBuf::from(filename.into()));
         program.hotload()?;
-        program.step();
+        program.step().ok();
 
         Ok(program)
     }
@@ -57,7 +58,7 @@ impl Program {
         let mut program = Program::new();
 
         program.set_instructions(instruction_set);
-        program.step();
+        program.step().ok();
 
         program
     }
@@ -111,21 +112,40 @@ impl Program {
         }
     }
 
-    pub fn step(&mut self) {
-        if let Err(exception) = self.engine.step() {
-            match exception {
-                Exception::Error(message) => {
-                    self.debug_messages.push(message);
-                }
-                Exception::RequestingInput => {
-                    self.enter_input_mode();
-                }
+    pub fn step(&mut self) -> EngineResult {
+        self.engine.step().tap_err(|e| match e {
+            Exception::Error(message) => {
+                self.debug_messages.push(message.clone());
+            }
+            Exception::RequestingInput => {
+                self.enter_input_mode();
+            }
+            Exception::Breakpoint => {}
+        })
+    }
+
+    pub fn undo(&mut self) -> EngineResult {
+        self.engine.undo().tap_err(|e| {
+            if let Exception::Error(message) = e {
+                self.debug_messages.push(message.clone());
+            }
+        })
+    }
+
+    pub fn step_until_exception(&mut self) {
+        loop {
+            if self.step().is_err() {
+                break;
             }
         }
     }
 
-    pub fn undo(&mut self) {
-        self.engine.undo().ok();
+    pub fn undo_until_exception(&mut self) {
+        loop {
+            if self.undo().is_err() {
+                break;
+            }
+        }
     }
 
     pub fn reset(&mut self) {
@@ -133,7 +153,7 @@ impl Program {
         if let Some(stdin) = &self.stdin {
             self.engine.input = stdin.clone();
         }
-        self.step();
+        self.step().ok();
     }
 
     pub fn is_interactive_mode(&self) -> bool {

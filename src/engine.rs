@@ -1,9 +1,12 @@
 use crate::instruction::Instruction;
 
+use tap::prelude::*;
+
 #[derive(Debug, Eq, PartialEq)]
 pub enum Exception {
     Error(String),
     RequestingInput,
+    Breakpoint,
 }
 
 impl Exception {
@@ -71,9 +74,13 @@ impl Engine {
 
     pub fn step(&mut self) -> EngineResult {
         match self.current_instruction() {
-            Some(instruction) => (instruction.exec)(self).map(|_| {
-                self.history.push(instruction);
-            }),
+            Some(instruction) => (instruction.exec)(self)
+                .tap(|_| self.history.push(instruction))
+                .tap_err(|e| {
+                    if e == &Exception::Breakpoint {
+                        self.history.push(instruction)
+                    }
+                }),
             None => self.next_instruction(),
         }
     }
@@ -84,9 +91,15 @@ impl Engine {
             .last()
             .ok_or_else(|| Exception::error("no previous instruction to undo"))?;
 
-        (instruction.unexec)(self).map(|_| {
-            self.history.pop();
-        })
+        (instruction.unexec)(self)
+            .tap(|_| {
+                self.history.pop();
+            })
+            .tap_err(|e| {
+                if e == &Exception::Breakpoint {
+                    self.history.pop();
+                }
+            })
     }
 
     pub fn reset(&mut self) {

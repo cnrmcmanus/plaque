@@ -47,9 +47,11 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
 
     let help_items: Vec<HelpItem> = match mode {
         Mode::Interactive => vec![
-            HelpItem::new("right", "Step"),
-            HelpItem::new("left", "Undo"),
+            HelpItem::new("→", "Step"),
+            HelpItem::new("←", "Undo"),
             HelpItem::new("space", "Play/Pause"),
+            HelpItem::new("↓", "Step to Breakpoint"),
+            HelpItem::new("↑", "Undo to Breakpoint"),
             HelpItem::new("e", "Editor Mode"),
             HelpItem::new("x", "Reset"),
             HelpItem::new("q", "Quit"),

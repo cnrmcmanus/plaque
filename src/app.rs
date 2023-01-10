@@ -60,10 +60,16 @@ pub fn spawn_program_thread(
                         tx_ui.send(()).unwrap();
                     }
                     KeyCode::Right => {
-                        program.step();
+                        program.step().ok();
                     }
                     KeyCode::Left => {
-                        program.undo();
+                        program.undo().ok();
+                    }
+                    KeyCode::Down => {
+                        program.step_until_exception();
+                    }
+                    KeyCode::Up => {
+                        program.undo_until_exception();
                     }
                     _ => {}
                 },
