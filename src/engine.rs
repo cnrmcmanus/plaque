@@ -113,8 +113,12 @@ impl Engine {
                 Exception::error("already at the end of the instruction list").result()
             }
             InstructionPointer::Start => {
-                self.instruction_pointer = InstructionPointer::Index(0);
-                Ok(())
+                if self.instructions.is_empty() {
+                    Exception::error("no instructions").result()
+                } else {
+                    self.instruction_pointer = InstructionPointer::Index(0);
+                    Ok(())
+                }
             }
             InstructionPointer::Index(i) if i + 1 == self.instructions.len() => {
                 self.instruction_pointer = InstructionPointer::End;
