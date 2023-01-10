@@ -20,7 +20,7 @@ impl Editor {
     pub fn new() -> Editor {
         Editor {
             filepath: None,
-            lines: vec![],
+            lines: vec!["".to_string()],
             cursor: (0, 0),
             pinned_col: 0,
         }
