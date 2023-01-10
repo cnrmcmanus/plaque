@@ -50,7 +50,14 @@ fn render_filename<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Progr
         .as_ref()
         .and_then(|path| path.file_name())
         .and_then(|name| name.to_str());
-    let paragraph = Paragraph::new(filename.unwrap_or("[Untitled]"))
+
+    let mut title = filename.unwrap_or("[Untitled]").to_string();
+
+    if program.editor.dirty {
+        title.push('*');
+    }
+
+    let paragraph = Paragraph::new(title)
         .alignment(tui::layout::Alignment::Center)
         .style(
             Style::default()
