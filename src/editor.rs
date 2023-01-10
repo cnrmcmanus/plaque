@@ -52,7 +52,7 @@ impl Editor {
         let (row, col) = self.cursor;
 
         self.lines[row].insert(col, c);
-        self.cursor = (row, col + 1);
+        self.set_pinned_cursor(row, col + 1);
         self.dirty = true;
     }
 
@@ -62,7 +62,7 @@ impl Editor {
 
         self.lines[row].truncate(col);
         self.lines.insert(row + 1, line);
-        self.cursor = (row + 1, 0);
+        self.set_pinned_cursor(row + 1, 0);
         self.dirty = true;
     }
 
@@ -70,7 +70,7 @@ impl Editor {
         let (row, col) = self.cursor;
         if col > 0 {
             self.lines[row].remove(col - 1);
-            self.cursor = (row, col - 1);
+            self.set_pinned_cursor(row, col - 1);
             self.dirty = true;
         } else if row > 0 {
             let line = self.lines[row].clone();
@@ -78,9 +78,14 @@ impl Editor {
 
             self.lines.remove(row);
             self.lines[row - 1] += &line;
-            self.cursor = (row - 1, prev_line_len);
+            self.set_pinned_cursor(row - 1, prev_line_len);
             self.dirty = true;
         }
+    }
+
+    pub fn set_pinned_cursor(&mut self, row: usize, col: usize) {
+        self.cursor = (row, col);
+        self.pinned_col = col;
     }
 
     pub fn move_cursor(&mut self, cursor_move: CursorMove) {
@@ -100,19 +105,17 @@ impl Editor {
             }
             CursorMove::Left => {
                 if col > 0 {
-                    self.cursor = (row, col - 1);
+                    self.set_pinned_cursor(row, col - 1);
                 } else if row > 0 {
-                    self.cursor = (row - 1, self.line_chars(row - 1));
+                    self.set_pinned_cursor(row - 1, self.line_chars(row - 1));
                 }
-                self.pinned_col = self.cursor.1;
             }
             CursorMove::Right => {
                 if col < self.line_chars(row) {
-                    self.cursor = (row, col + 1);
+                    self.set_pinned_cursor(row, col + 1);
                 } else if row < self.lines.len() - 1 {
-                    self.cursor = (row + 1, 0);
+                    self.set_pinned_cursor(row + 1, 0);
                 }
-                self.pinned_col = self.cursor.1;
             }
         }
     }
