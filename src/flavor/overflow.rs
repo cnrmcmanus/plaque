@@ -127,7 +127,21 @@ pub const JUMP_BACKWARD: Instruction = Instruction {
     },
 };
 
-pub const INSTRUCTION_SET: [Instruction; 8] = [
+pub const BREAKPOINT: Instruction = Instruction {
+    symbol: '$',
+
+    exec: |program| {
+        program.next_instruction()?;
+        Exception::Breakpoint.result()
+    },
+
+    unexec: |program| {
+        program.prev_instruction()?;
+        Exception::Breakpoint.result()
+    },
+};
+
+pub const INSTRUCTION_SET: [Instruction; 9] = [
     INCREMENT_POINTER,
     DECREMENT_POINTER,
     INCREMENT_CELL,
@@ -136,4 +150,5 @@ pub const INSTRUCTION_SET: [Instruction; 8] = [
     INPUT,
     JUMP_FORWARD,
     JUMP_BACKWARD,
+    BREAKPOINT,
 ];
