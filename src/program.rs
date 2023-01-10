@@ -102,6 +102,13 @@ impl Program {
                 }
             }
         }
+
+        if self.engine.instructions.is_empty() {
+            self.engine.instruction_pointer = InstructionPointer::Start;
+        } else if let InstructionPointer::Index(i) = self.engine.instruction_pointer {
+            self.engine.instruction_pointer =
+                InstructionPointer::Index(std::cmp::min(i, self.instruction_positions.len() - 1));
+        }
     }
 
     pub fn step(&mut self) {
