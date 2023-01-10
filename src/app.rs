@@ -68,6 +68,9 @@ pub fn spawn_program_thread(
                     _ => {}
                 },
                 Mode::Editor => match event.code {
+                    KeyCode::Char('s') if event.modifiers.contains(KeyModifiers::CONTROL) => {
+                        program.editor.save().ok();
+                    }
                     KeyCode::Char(c) => {
                         program.editor.insert_char(c);
                         program.index_instructions();
