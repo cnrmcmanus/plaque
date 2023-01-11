@@ -163,4 +163,21 @@ impl Editor {
             self.lines.remove(xi + 1);
         }
     }
+
+    pub fn in_selection(&self, i: usize, j: usize) -> bool {
+        if self.lines[i].len() == j {
+            return false;
+        }
+
+        let Some((si, sj)) = self.selection else {
+            return false;
+        };
+        let (ci, cj) = self.cursor;
+
+        if (ci, cj) < (si, sj) {
+            (ci, cj) <= (i, j) && (i, j) < (si, sj)
+        } else {
+            (si, sj) <= (i, j) && (i, j) < (ci, cj)
+        }
+    }
 }
