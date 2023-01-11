@@ -47,6 +47,8 @@ pub fn spawn_program_thread(
         if let Ok(event) = rx_program.recv() {
             let mut guard = shared_state.lock().unwrap();
             let program = &mut guard;
+            let control = event.modifiers.contains(KeyModifiers::CONTROL);
+            let shift = event.modifiers.contains(KeyModifiers::SHIFT);
 
             match program.mode {
                 Mode::Interactive => match event.code {
@@ -74,7 +76,7 @@ pub fn spawn_program_thread(
                     _ => {}
                 },
                 Mode::Editor => match event.code {
-                    KeyCode::Char('s') if event.modifiers.contains(KeyModifiers::CONTROL) => {
+                    KeyCode::Char('s') if control => {
                         program.editor.save().ok();
                     }
                     KeyCode::Char(c) => {
@@ -89,10 +91,10 @@ pub fn spawn_program_thread(
                         program.editor.backward_delete();
                         program.index_instructions();
                     }
-                    KeyCode::Up => program.editor.move_cursor(editor::CursorMove::Up),
-                    KeyCode::Down => program.editor.move_cursor(editor::CursorMove::Down),
-                    KeyCode::Left => program.editor.move_cursor(editor::CursorMove::Left),
-                    KeyCode::Right => program.editor.move_cursor(editor::CursorMove::Right),
+                    KeyCode::Up => program.editor.move_cursor(editor::CursorMove::Up, shift),
+                    KeyCode::Down => program.editor.move_cursor(editor::CursorMove::Down, shift),
+                    KeyCode::Left => program.editor.move_cursor(editor::CursorMove::Left, shift),
+                    KeyCode::Right => program.editor.move_cursor(editor::CursorMove::Right, shift),
                     KeyCode::Esc => {
                         program.mode = Mode::Interactive;
                     }

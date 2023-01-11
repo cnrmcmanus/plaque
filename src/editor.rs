@@ -5,6 +5,7 @@ pub struct Editor {
     pub filepath: Option<PathBuf>,
     pub lines: Vec<String>,
     pub cursor: (usize, usize),
+    pub selection: Option<(usize, usize)>,
     pub pinned_col: usize,
     pub dirty: bool,
 }
@@ -23,6 +24,7 @@ impl Editor {
             filepath: None,
             lines: vec!["".to_string()],
             cursor: (0, 0),
+            selection: None,
             pinned_col: 0,
             dirty: false,
         }
@@ -49,6 +51,8 @@ impl Editor {
     }
 
     pub fn insert_char(&mut self, c: char) {
+        self.delete_selection();
+
         let (row, col) = self.cursor;
 
         self.lines[row].insert(col, c);
@@ -57,6 +61,8 @@ impl Editor {
     }
 
     pub fn newline(&mut self) {
+        self.delete_selection();
+
         let (row, col) = self.cursor;
         let line: String = self.lines[row].chars().skip(col).collect();
 
@@ -67,6 +73,10 @@ impl Editor {
     }
 
     pub fn backward_delete(&mut self) {
+        if self.selection.is_some() {
+            return self.delete_selection();
+        }
+
         let (row, col) = self.cursor;
         if col > 0 {
             self.lines[row].remove(col - 1);
@@ -88,8 +98,15 @@ impl Editor {
         self.pinned_col = col;
     }
 
-    pub fn move_cursor(&mut self, cursor_move: CursorMove) {
+    pub fn move_cursor(&mut self, cursor_move: CursorMove, selection: bool) {
         let (row, col) = self.cursor;
+
+        self.selection = if selection {
+            Some(self.selection.unwrap_or(self.cursor))
+        } else {
+            None
+        };
+
         match cursor_move {
             CursorMove::Up => {
                 if row > 0 {
@@ -117,6 +134,33 @@ impl Editor {
                     self.set_pinned_cursor(row + 1, 0);
                 }
             }
+        }
+    }
+
+    pub fn delete_selection(&mut self) {
+        let (ci, cj) = self.cursor;
+        let Some((si, sj)) = self.selection else {
+            return
+        };
+
+        self.selection = None;
+        if (si, sj) < (ci, cj) {
+            self.cursor = (si, sj);
+        }
+
+        let (xi, xj) = std::cmp::min((si, sj), (ci, cj));
+        let (yi, yj) = std::cmp::max((si, sj), (ci, cj));
+
+        if xi == yi {
+            self.lines[xi].drain(std::cmp::min(xj, yj)..std::cmp::max(xj, yj));
+        } else {
+            self.lines[xi].truncate(xj);
+            self.lines[yi].drain(0..yj);
+            self.lines.drain(xi + 1..yi);
+
+            let end = self.lines[xi + 1].clone();
+            self.lines[xi] += &end;
+            self.lines.remove(xi + 1);
         }
     }
 }
