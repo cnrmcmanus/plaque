@@ -1,15 +1,15 @@
-use num_integer::Integer;
 use std::cmp::max;
 use tui::{
     backend::Backend,
     layout::{Constraint, Rect},
     terminal::Frame,
-    text::{Span, Spans},
+    text::Span,
     widgets::{Block, Borders, Cell, Row, Table},
 };
 
 use crate::program::Mode;
 
+#[derive(Debug)]
 struct HelpItem<'a> {
     hotkey: &'a str,
     label: &'a str,
@@ -21,15 +21,10 @@ impl HelpItem<'_> {
     }
 
     fn to_cell(&self, hotkey_width: usize, label_width: usize) -> Cell<'_> {
-        Cell::from(Spans::from(vec![
-            Span::from(" "),
-            Span::from(self.hotkey),
-            Span::from(" ".repeat(hotkey_width - self.hotkey.chars().count())),
-            Span::from(" = "),
-            Span::from(self.label),
-            Span::from(" ".repeat(label_width - self.label.chars().count())),
-            Span::from(" "),
-        ]))
+        Cell::from(Span::from(format!(
+            " {:hotkey_width$} = {:label_width$}",
+            self.hotkey, self.label
+        )))
     }
 }
 
@@ -68,31 +63,42 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
         ],
     };
 
-    let (hotkey_width, label_width) = help_items.iter().fold((0, 0), |accum, item| {
-        (
-            max(accum.0, item.hotkey.chars().count()),
-            max(accum.1, item.label.chars().count()),
-        )
-    });
-    let columns = help_items.len().next_multiple_of(&height);
+    let (columns, widths): (Vec<_>, Vec<_>) = help_items
+        .as_slice()
+        .chunks(height)
+        .map(|column| {
+            let (hotkey_width, label_width) = column.iter().fold((0, 0), |accum, item| {
+                (
+                    max(accum.0, item.hotkey.chars().count()),
+                    max(accum.1, item.label.chars().count()),
+                )
+            });
+            let cells: Vec<_> = column
+                .iter()
+                .map(|item| item.to_cell(hotkey_width, label_width))
+                .collect();
+            let total_width = hotkey_width + label_width + 5;
+
+            (cells, Constraint::Length(total_width as u16))
+        })
+        .unzip();
+
     let rows = (0..height).map(|i| {
         Row::new(
-            help_items
+            columns
                 .iter()
+                .flatten()
                 .skip(i)
                 .step_by(height)
-                .map(|item| item.to_cell(hotkey_width, label_width))
-                .collect::<Vec<Cell>>(),
+                .cloned()
+                .collect::<Vec<_>>(),
         )
     });
-    let width = (hotkey_width + label_width + 5) as u16;
-    let widths = (0..columns)
-        .map(|_| Constraint::Length(width))
-        .collect::<Vec<Constraint>>();
+
     let table = Table::new(rows)
         .block(Block::default().borders(Borders::ALL).title(title))
-        .widths(widths.as_ref())
-        .column_spacing(4);
+        .widths(&widths)
+        .column_spacing(2);
 
     frame.render_widget(table, area);
 }
