@@ -58,7 +58,7 @@ pub fn spawn_program_thread(
                     KeyCode::Char('x') => {
                         program.reset();
                     }
-                    KeyCode::Char('q') => {
+                    KeyCode::Esc | KeyCode::Char('q') => {
                         tx_ui.send(()).unwrap();
                     }
                     KeyCode::Right => {

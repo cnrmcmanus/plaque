@@ -49,7 +49,7 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
             HelpItem::new("↑", "Undo to Breakpoint"),
             HelpItem::new("e", "Editor Mode"),
             HelpItem::new("x", "Reset"),
-            HelpItem::new("q", "Quit"),
+            HelpItem::new("esc/q", "Quit"),
         ],
         Mode::Editor => vec![
             HelpItem::new("esc", "Done"),
