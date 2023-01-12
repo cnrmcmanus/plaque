@@ -102,6 +102,10 @@ pub fn spawn_program_thread(
                         program.editor.backward_delete();
                         program.index_instructions();
                     }
+                    KeyCode::Delete => {
+                        program.editor.forward_delete();
+                        program.index_instructions();
+                    }
                     KeyCode::Up => program.editor.move_cursor(editor::CursorMove::Up, shift),
                     KeyCode::Down => program.editor.move_cursor(editor::CursorMove::Down, shift),
                     KeyCode::Left => program.editor.move_cursor(editor::CursorMove::Left, shift),

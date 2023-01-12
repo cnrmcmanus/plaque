@@ -95,6 +95,22 @@ impl Editor {
         }
     }
 
+    pub fn forward_delete(&mut self) {
+        if self.selection.is_some() {
+            return self.delete_selection();
+        }
+
+        let (row, col) = self.cursor;
+        if col < self.lines[row].len() {
+            self.lines[row].remove(col);
+            self.dirty = true;
+        } else if row + 1 < self.lines.len() {
+            let next_line = self.lines.remove(row + 1);
+            self.lines[row] += &next_line;
+            self.dirty = true;
+        }
+    }
+
     pub fn set_pinned_cursor(&mut self, row: usize, col: usize) {
         self.cursor = (row, col);
         self.pinned_col = col;
@@ -160,9 +176,8 @@ impl Editor {
             self.lines[yi].drain(0..yj);
             self.lines.drain(xi + 1..yi);
 
-            let end = self.lines[xi + 1].clone();
+            let end = self.lines.remove(xi + 1);
             self.lines[xi] += &end;
-            self.lines.remove(xi + 1);
         }
     }
 
