@@ -6,6 +6,7 @@ pub struct Editor {
     pub lines: Vec<String>,
     pub cursor: (usize, usize),
     pub selection: Option<(usize, usize)>,
+    pub clipboard: Option<Vec<String>>,
     pub pinned_col: usize,
     pub dirty: bool,
 }
@@ -25,6 +26,7 @@ impl Editor {
             lines: vec!["".to_string()],
             cursor: (0, 0),
             selection: None,
+            clipboard: None,
             pinned_col: 0,
             dirty: false,
         }
@@ -161,6 +163,50 @@ impl Editor {
             let end = self.lines[xi + 1].clone();
             self.lines[xi] += &end;
             self.lines.remove(xi + 1);
+        }
+    }
+
+    pub fn copy_selection(&mut self) {
+        let (ci, cj) = self.cursor;
+        let Some((si, sj)) = self.selection else {
+            return
+        };
+
+        let (xi, xj) = std::cmp::min((si, sj), (ci, cj));
+        let (yi, yj) = std::cmp::max((si, sj), (ci, cj));
+
+        if xi == yi {
+            let line = self.lines[xi][xj..yj].to_string();
+            self.clipboard = Some(vec![line]);
+        } else {
+            let mut lines = vec![];
+            lines.push(self.lines[xi][xj..].to_string());
+            lines.append(self.lines[xi + 1..yi].to_vec().as_mut());
+            lines.push(self.lines[yi][..yj].to_string());
+            self.clipboard = Some(lines);
+        }
+    }
+
+    pub fn cut_selection(&mut self) {
+        self.copy_selection();
+        self.delete_selection();
+    }
+
+    pub fn paste(&mut self) {
+        let (i, j) = self.cursor;
+        let Some(clipboard) = self.clipboard.clone() else {
+            return
+        };
+
+        if clipboard.len() == 1 {
+            self.lines[i].insert_str(j, &clipboard[0]);
+        } else {
+            let len = clipboard.len();
+            let end = self.lines[i].split_off(j);
+
+            self.lines[i] += &clipboard[0];
+            self.lines.splice(i + 1..i + 1, clipboard[1..len].to_vec());
+            self.lines[i + len - 1] += &end;
         }
     }
 

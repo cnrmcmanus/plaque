@@ -79,6 +79,17 @@ pub fn spawn_program_thread(
                     KeyCode::Char('s') if control => {
                         program.editor.save().ok();
                     }
+                    KeyCode::Char('c') if control => {
+                        program.editor.copy_selection();
+                    }
+                    KeyCode::Char('x') if control => {
+                        program.editor.cut_selection();
+                        program.index_instructions();
+                    }
+                    KeyCode::Char('v') if control => {
+                        program.editor.paste();
+                        program.index_instructions();
+                    }
                     KeyCode::Char(c) => {
                         program.editor.insert_char(c);
                         program.index_instructions();
