@@ -57,7 +57,11 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
         })
         .collect::<Vec<_>>();
 
-    let program = Paragraph::new(text).block(Block::default().borders(Borders::ALL));
+    let height = area.height - 2;
+    let page = program.editor.cursor.0 as u16 / height;
+    let program = Paragraph::new(text)
+        .block(Block::default().borders(Borders::ALL))
+        .scroll((page * height, 0));
 
     frame.render_widget(program, area);
 }
