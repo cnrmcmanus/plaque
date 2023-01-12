@@ -100,13 +100,13 @@ pub const JUMP_FORWARD: Instruction = Instruction {
 
     exec: |program| {
         if program.cell() == 0 {
-            program.goto_next(JUMP_BACKWARD)?;
+            program.goto_next(JUMP_BACKWARD, JUMP_FORWARD)?;
         }
         program.next_instruction()
     },
 
     unexec: |program| match program.cell() {
-        0 => program.goto_prev(JUMP_FORWARD),
+        0 => program.goto_prev(JUMP_FORWARD, JUMP_BACKWARD),
         _ => program.prev_instruction(),
     },
 };
@@ -116,14 +116,14 @@ pub const JUMP_BACKWARD: Instruction = Instruction {
 
     exec: |program| {
         if program.cell() != 0 {
-            program.goto_prev(JUMP_FORWARD)?;
+            program.goto_prev(JUMP_FORWARD, JUMP_BACKWARD)?;
         }
         program.next_instruction()
     },
 
     unexec: |program| match program.cell() {
         0 => program.prev_instruction(),
-        _ => program.goto_next(JUMP_BACKWARD),
+        _ => program.goto_next(JUMP_BACKWARD, JUMP_FORWARD),
     },
 };
 

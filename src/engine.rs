@@ -164,7 +164,7 @@ impl Engine {
         }
     }
 
-    pub fn goto_next(&mut self, goto: Instruction) -> EngineResult {
+    pub fn goto_next(&mut self, goto: Instruction, matching: Instruction) -> EngineResult {
         let start = match self.instruction_pointer {
             InstructionPointer::End => {
                 Exception::error("already at the end of the instruction list").result()
@@ -174,17 +174,24 @@ impl Engine {
         }?;
 
         let rest = self.instructions.iter().skip(start);
+        let mut skip = 0;
         for (i, instruction) in rest.enumerate() {
             if instruction == &goto {
-                self.instruction_pointer = InstructionPointer::Index(start + i);
-                return Ok(());
+                if skip == 0 {
+                    self.instruction_pointer = InstructionPointer::Index(start + i);
+                    return Ok(());
+                } else {
+                    skip -= 1;
+                }
+            } else if instruction == &matching {
+                skip += 1;
             }
         }
 
         Exception::error(format!("no next {} instruction found", goto.symbol)).result()
     }
 
-    pub fn goto_prev(&mut self, goto: Instruction) -> EngineResult {
+    pub fn goto_prev(&mut self, goto: Instruction, matching: Instruction) -> EngineResult {
         let end = match self.instruction_pointer {
             InstructionPointer::Start => {
                 Exception::error("already at the start of the instruction list").result()
@@ -194,10 +201,17 @@ impl Engine {
         }?;
 
         let rest = self.instructions.iter().take(end);
+        let mut skip = 0;
         for (i, instruction) in rest.rev().enumerate() {
             if instruction == &goto {
-                self.instruction_pointer = InstructionPointer::Index(end - i - 1);
-                return Ok(());
+                if skip == 0 {
+                    self.instruction_pointer = InstructionPointer::Index(end - i - 1);
+                    return Ok(());
+                } else {
+                    skip -= 1;
+                }
+            } else if instruction == &matching {
+                skip += 1;
             }
         }
 
@@ -322,18 +336,19 @@ mod tests {
     fn goto_next_moves_to_next_instruction() {
         let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C, NOOP_B, NOOP_A, NOOP_C]);
 
-        ok(program.goto_next(NOOP_C));
+        ok(program.goto(0));
+        ok(program.goto_next(NOOP_C, NOOP_A));
 
         assert_eq!(program.current_instruction(), Some(NOOP_C));
         assert_eq!(program.instruction_pointer, InstructionPointer::Index(2));
     }
 
     #[test]
-    fn goto_next_twice_moves_to_second_instruction() {
-        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C, NOOP_B, NOOP_A, NOOP_C]);
+    fn goto_next_matches_nesting() {
+        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_A, NOOP_C, NOOP_B, NOOP_C]);
 
-        ok(program.goto_next(NOOP_C));
-        ok(program.goto_next(NOOP_C));
+        ok(program.goto(0));
+        ok(program.goto_next(NOOP_C, NOOP_A));
 
         assert_eq!(program.current_instruction(), Some(NOOP_C));
         assert_eq!(program.instruction_pointer, InstructionPointer::Index(5));
@@ -343,9 +358,10 @@ mod tests {
     fn goto_next_fails_gracefully_on_overrun() {
         let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C, NOOP_A]);
 
-        ok(program.goto_next(NOOP_C));
+        ok(program.goto(0));
+        ok(program.goto_next(NOOP_C, NOOP_A));
 
-        assert!(program.goto_next(NOOP_B).is_err());
+        assert!(program.goto_next(NOOP_C, NOOP_A).is_err());
         assert_eq!(program.current_instruction(), Some(NOOP_C));
         assert_eq!(program.instruction_pointer, InstructionPointer::Index(2));
     }
@@ -355,19 +371,18 @@ mod tests {
         let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C, NOOP_B, NOOP_A, NOOP_C]);
 
         ok(program.goto(5));
-        ok(program.goto_prev(NOOP_A));
+        ok(program.goto_prev(NOOP_A, NOOP_C));
 
         assert_eq!(program.current_instruction(), Some(NOOP_A));
         assert_eq!(program.instruction_pointer, InstructionPointer::Index(4));
     }
 
     #[test]
-    fn goto_prev_twice_moves_to_second_instruction() {
-        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C, NOOP_B, NOOP_A, NOOP_C]);
+    fn goto_prev_nmatches_nesting() {
+        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_A, NOOP_C, NOOP_B, NOOP_C]);
 
         ok(program.goto(5));
-        ok(program.goto_prev(NOOP_A));
-        ok(program.goto_prev(NOOP_A));
+        ok(program.goto_prev(NOOP_A, NOOP_C));
 
         assert_eq!(program.current_instruction(), Some(NOOP_A));
         assert_eq!(program.instruction_pointer, InstructionPointer::Index(0));
@@ -378,9 +393,9 @@ mod tests {
         let mut program = Engine::new(vec![NOOP_C, NOOP_A, NOOP_B, NOOP_C]);
 
         ok(program.goto(3));
-        ok(program.goto_prev(NOOP_A));
+        ok(program.goto_prev(NOOP_A, NOOP_C));
 
-        assert!(program.goto_prev(NOOP_B).is_err());
+        assert!(program.goto_prev(NOOP_A, NOOP_C).is_err());
         assert_eq!(program.current_instruction(), Some(NOOP_A));
         assert_eq!(program.instruction_pointer, InstructionPointer::Index(1));
     }
