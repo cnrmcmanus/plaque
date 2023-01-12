@@ -106,6 +106,10 @@ pub fn spawn_program_thread(
                     KeyCode::Down => program.editor.move_cursor(editor::CursorMove::Down, shift),
                     KeyCode::Left => program.editor.move_cursor(editor::CursorMove::Left, shift),
                     KeyCode::Right => program.editor.move_cursor(editor::CursorMove::Right, shift),
+                    KeyCode::Tab => {
+                        program.editor.indent();
+                        program.index_instructions();
+                    }
                     KeyCode::Esc => {
                         program.mode = Mode::Interactive;
                     }

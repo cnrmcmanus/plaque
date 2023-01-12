@@ -210,6 +210,34 @@ impl Editor {
         }
     }
 
+    pub fn indent(&mut self) {
+        let (si, sj) = self.selection.unwrap_or(self.cursor);
+        let (ci, cj) = self.cursor;
+        let xi = std::cmp::min(si, ci);
+        let mut yi = std::cmp::max(si, ci);
+        let yj = std::cmp::max(sj, cj);
+
+        // don't tab the last line if the range ends at index 0
+        if xi != yi && yj == 0 {
+            yi -= 1;
+        }
+
+        for line in self.lines[xi..yi + 1].iter_mut() {
+            line.insert_str(0, "  ");
+        }
+
+        // advance the selection and cursor column position by 2
+        // unless it ends the range and is at index 0
+        if !(si > ci && sj == 0) {
+            self.selection = self.selection.map(|_| (si, sj + 2));
+        }
+        if !(ci > si && cj == 0) {
+            self.cursor = (ci, cj + 2);
+        }
+
+        self.dirty = true;
+    }
+
     pub fn in_selection(&self, i: usize, j: usize) -> bool {
         if self.lines[i].len() == j {
             return false;
