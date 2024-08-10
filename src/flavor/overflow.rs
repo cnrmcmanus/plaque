@@ -75,7 +75,12 @@ pub const INPUT: Instruction = Instruction {
     symbol: ',',
 
     exec: |program| match program.pop_input() {
-        None => Exception::RequestingInput.result(),
+        None => {
+            let cell = program.cell();
+            program.set_cell(0);
+            program.input_cell_history.push(cell);
+            program.next_instruction()
+        },
         Some(input) => {
             let cell = program.cell();
             program.set_cell(input);
