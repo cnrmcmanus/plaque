@@ -76,6 +76,9 @@ pub fn spawn_program_thread(
                     _ => {}
                 },
                 Mode::Editor => match event.code {
+                    KeyCode::Char('r') if control => {
+                        program.reset();
+                    }
                     KeyCode::Char('s') if control => {
                         program.editor.save().ok();
                     }
@@ -106,9 +109,13 @@ pub fn spawn_program_thread(
                         program.editor.forward_delete();
                         program.index_instructions();
                     }
+                    KeyCode::Up if control => { program.undo_until_exception(); },
                     KeyCode::Up => program.editor.move_cursor(editor::CursorMove::Up, shift),
+                    KeyCode::Down if control => { program.step_until_exception(); },
                     KeyCode::Down => program.editor.move_cursor(editor::CursorMove::Down, shift),
+                    KeyCode::Left if control => { program.undo().ok(); },
                     KeyCode::Left => program.editor.move_cursor(editor::CursorMove::Left, shift),
+                    KeyCode::Right if control => { program.step().ok(); },
                     KeyCode::Right => program.editor.move_cursor(editor::CursorMove::Right, shift),
                     KeyCode::Tab => {
                         program.editor.indent();
