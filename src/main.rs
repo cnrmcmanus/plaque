@@ -1,4 +1,4 @@
-#![allow(dead_code, unstable_name_collisions)]
+#![allow(dead_code)]
 #![feature(iter_intersperse)]
 
 mod app;

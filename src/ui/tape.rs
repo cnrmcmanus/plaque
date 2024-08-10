@@ -1,4 +1,3 @@
-use num_integer::Integer;
 use tui::{
     backend::Backend,
     layout::{Alignment, Rect},
@@ -76,7 +75,7 @@ impl TapeSpace {
         let available = width - 3;
         let (half, remainder) = (available / 2, available % 2);
         let (left, right) = (half + remainder, half);
-        let (left_slots, right_slots) = (left.div_ceil(&4), right.div_ceil(&4));
+        let (left_slots, right_slots) = (left.div_ceil(4), right.div_ceil(4));
 
         let used_left_slots = std::cmp::min(left_slots, tape_pointer);
         let unused_left_slots = left_slots - used_left_slots;
