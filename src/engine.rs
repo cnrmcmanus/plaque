@@ -1,4 +1,4 @@
-use crate::instruction::Instruction;
+use crate::instruction::Instruction::{self, *};
 
 use tap::prelude::*;
 
@@ -58,23 +58,111 @@ impl Engine {
         self.instructions = instructions;
     }
 
-    pub fn goto(&mut self, instruction_index: usize) -> EngineResult {
-        if instruction_index < self.instructions.len() {
-            self.instruction_pointer = InstructionPointer::Index(instruction_index);
-            Ok(())
-        } else {
-            Exception::error(format!(
-                "no instruction at position {} (max {})",
-                instruction_index,
-                self.instructions.len() - 1
-            ))
-            .result()
+    pub fn execute(&mut self, instruction: Instruction) -> EngineResult {
+        match instruction {
+            IncrementPointer => {
+                self.next_cell()?;
+                self.next_instruction()
+            }
+            DecrementPointer => {
+                self.prev_cell()?;
+                self.next_instruction()
+            }
+            Increment => {
+                self.map_cell(|cell| cell.wrapping_add(1));
+                self.next_instruction()
+            }
+            Decrement => {
+                self.map_cell(|cell| cell.wrapping_sub(1));
+                self.next_instruction()
+            }
+            Output => {
+                self.output.push(self.cell());
+                self.next_instruction()
+            }
+            Input => match self.pop_input() {
+                None => {
+                    let cell = self.cell();
+                    self.set_cell(0);
+                    self.input_cell_history.push(cell);
+                    self.next_instruction()
+                }
+                Some(input) => {
+                    let cell = self.cell();
+                    self.set_cell(input);
+                    self.input_cell_history.push(cell);
+                    self.next_instruction()
+                }
+            },
+            JumpForward => {
+                if self.cell() == 0 {
+                    self.goto_next(JumpBackward, JumpForward)?;
+                }
+                self.next_instruction()
+            }
+            JumpBackward => {
+                if self.cell() != 0 {
+                    self.goto_prev(JumpForward, JumpBackward)?;
+                }
+                self.next_instruction()
+            }
+            Breakpoint => {
+                self.next_instruction()?;
+                Exception::Breakpoint.result()
+            }
+        }
+    }
+
+    pub fn unexecute(&mut self, instruction: Instruction) -> EngineResult {
+        match instruction {
+            IncrementPointer => {
+                self.prev_cell()?;
+                self.prev_instruction()
+            }
+            DecrementPointer => {
+                self.next_cell()?;
+                self.prev_instruction()
+            }
+            Increment => {
+                self.map_cell(|cell| cell.wrapping_sub(1));
+                self.prev_instruction()
+            }
+            Decrement => {
+                self.map_cell(|cell| cell.wrapping_add(1));
+                self.prev_instruction()
+            }
+            Output => {
+                self.output.pop();
+                self.prev_instruction()
+            }
+            Input => match self.input_cell_history.pop() {
+                None => Exception::error("no input to undo").result(),
+                Some(cell) => {
+                    let input = self.cell();
+                    self.set_cell(cell);
+                    self.push_input(input);
+                    self.prev_instruction()
+                }
+            },
+            JumpForward => match self.cell() {
+                0 => self.goto_prev(JumpForward, JumpBackward),
+                _ => self.prev_instruction(),
+            },
+            JumpBackward => match self.cell() {
+                0 => self.prev_instruction(),
+                _ => self.goto_next(JumpBackward, JumpForward),
+            },
+            Breakpoint => {
+                self.prev_instruction()?;
+                Exception::Breakpoint.result()
+            }
         }
     }
 
     pub fn step(&mut self) -> EngineResult {
         match self.current_instruction() {
-            Some(instruction) => (instruction.exec)(self)
+            Some(instruction) => self
+                .execute(instruction)
                 .tap(|_| self.history.push(instruction))
                 .tap_err(|e| {
                     if e == &Exception::Breakpoint {
@@ -89,9 +177,10 @@ impl Engine {
         let instruction = self
             .history
             .last()
+            .cloned()
             .ok_or_else(|| Exception::error("no previous instruction to undo"))?;
 
-        (instruction.unexec)(self)
+        self.unexecute(instruction)
             .tap(|_| {
                 self.history.pop();
             })
@@ -100,6 +189,20 @@ impl Engine {
                     self.history.pop();
                 }
             })
+    }
+
+    pub fn goto(&mut self, instruction_index: usize) -> EngineResult {
+        if instruction_index < self.instructions.len() {
+            self.instruction_pointer = InstructionPointer::Index(instruction_index);
+            Ok(())
+        } else {
+            Exception::error(format!(
+                "no instruction at position {} (max {})",
+                instruction_index,
+                self.instructions.len() - 1
+            ))
+            .result()
+        }
     }
 
     pub fn reset(&mut self) {
@@ -188,7 +291,7 @@ impl Engine {
             }
         }
 
-        Exception::error(format!("no next {} instruction found", goto.symbol)).result()
+        Exception::error(format!("no next {} instruction found", goto.symbol())).result()
     }
 
     pub fn goto_prev(&mut self, goto: Instruction, matching: Instruction) -> EngineResult {
@@ -215,7 +318,7 @@ impl Engine {
             }
         }
 
-        Exception::error(format!("no previous {} instruction found", goto.symbol)).result()
+        Exception::error(format!("no previous {} instruction found", goto.symbol())).result()
     }
 
     pub fn next_cell(&mut self) -> EngineResult {

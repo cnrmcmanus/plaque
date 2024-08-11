@@ -1,33 +1,45 @@
-use crate::engine::{Engine, EngineResult};
-
-pub struct Instruction {
-    pub symbol: char,
-    pub exec: fn(&mut Engine) -> EngineResult,
-    pub unexec: fn(&mut Engine) -> EngineResult,
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Instruction {
+    IncrementPointer,
+    DecrementPointer,
+    Increment,
+    Decrement,
+    Output,
+    Input,
+    JumpForward,
+    JumpBackward,
+    Breakpoint,
 }
 
-impl Clone for Instruction {
-    fn clone(&self) -> Instruction {
-        Instruction {
-            symbol: self.symbol,
-            exec: self.exec,
-            unexec: self.unexec,
+pub use Instruction::*;
+
+impl Instruction {
+    pub fn read(symbol: char) -> Option<Instruction> {
+        match symbol {
+            '>' => Some(IncrementPointer),
+            '<' => Some(DecrementPointer),
+            '+' => Some(Increment),
+            '-' => Some(Decrement),
+            '.' => Some(Output),
+            ',' => Some(Input),
+            '[' => Some(JumpForward),
+            ']' => Some(JumpBackward),
+            '$' => Some(Breakpoint),
+            _ => None,
         }
     }
-}
 
-impl Copy for Instruction {}
-
-impl std::cmp::PartialEq for Instruction {
-    fn eq(&self, other: &Instruction) -> bool {
-        self.symbol == other.symbol
-    }
-}
-
-impl std::cmp::Eq for Instruction {}
-
-impl std::fmt::Debug for Instruction {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(fmt, "{}", self.symbol)
+    pub fn symbol(&self) -> char {
+        match self {
+            IncrementPointer => '>',
+            DecrementPointer => '<',
+            Increment => '+',
+            Decrement => '-',
+            Output => '.',
+            Input => ',',
+            JumpForward => '[',
+            JumpBackward => ']',
+            Breakpoint => '$',
+        }
     }
 }

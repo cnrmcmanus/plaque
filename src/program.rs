@@ -2,7 +2,6 @@ use crate::editor::Editor;
 use crate::engine::{Engine, EngineResult, Exception, InstructionPointer};
 use crate::instruction::Instruction;
 
-use std::collections::HashMap;
 use std::io::{self, Read};
 use std::path::PathBuf;
 use tap::prelude::*;
@@ -17,7 +16,6 @@ pub enum Mode {
 #[derive(Debug)]
 pub struct Program {
     pub engine: Engine,
-    pub instruction_set: HashMap<char, Instruction>,
     pub editor: Editor,
     pub instruction_positions: Vec<(usize, usize)>,
     pub mode: Mode,
@@ -30,7 +28,6 @@ impl Program {
     pub fn new() -> Program {
         Program {
             engine: Engine::new(vec![]),
-            instruction_set: HashMap::new(),
             editor: Editor::new(),
             instruction_positions: vec![],
             mode: Mode::Interactive,
@@ -40,13 +37,9 @@ impl Program {
         }
     }
 
-    pub fn load<S: Into<String>>(
-        filename: S,
-        instruction_set: Vec<Instruction>,
-    ) -> io::Result<Program> {
+    pub fn load<S: Into<String>>(filename: S) -> io::Result<Program> {
         let mut program = Program::new();
 
-        program.set_instructions(instruction_set);
         program.editor.filepath = Some(PathBuf::from(filename.into()));
         program.hotload()?;
         program.step().ok();
@@ -54,24 +47,10 @@ impl Program {
         Ok(program)
     }
 
-    pub fn blank(instruction_set: Vec<Instruction>) -> Program {
+    pub fn blank() -> Program {
         let mut program = Program::new();
-
-        program.set_instructions(instruction_set);
         program.step().ok();
-
         program
-    }
-
-    pub fn set_instructions(&mut self, instruction_set: Vec<Instruction>) {
-        self.instruction_set = HashMap::new();
-        for instruction in instruction_set {
-            self.instruction_set.insert(instruction.symbol, instruction);
-        }
-    }
-
-    pub fn read_instruction(&self, character: char) -> Option<Instruction> {
-        self.instruction_set.get(&character).copied()
     }
 
     pub fn hotload(&mut self) -> io::Result<()> {
@@ -96,7 +75,7 @@ impl Program {
 
         for (line_number, line) in self.editor.lines.iter().enumerate() {
             for (column_number, character) in line.chars().enumerate() {
-                if let Some(instruction) = self.read_instruction(character) {
+                if let Some(instruction) = Instruction::read(character) {
                     self.engine.instructions.push(instruction);
                     self.instruction_positions
                         .push((line_number, column_number));
