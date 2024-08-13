@@ -252,7 +252,7 @@ impl Engine {
                 self.instruction_pointer = InstructionPointer::Index(self.instructions.len() - 1);
                 Ok(())
             }
-            InstructionPointer::Index(i) if i == 0 => {
+            InstructionPointer::Index(0) => {
                 self.instruction_pointer = InstructionPointer::Start;
                 Ok(())
             }

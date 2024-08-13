@@ -158,7 +158,7 @@ impl Editor {
     pub fn delete_selection(&mut self) {
         let (ci, cj) = self.cursor;
         let Some((si, sj)) = self.selection else {
-            return
+            return;
         };
 
         self.selection = None;
@@ -184,7 +184,7 @@ impl Editor {
     pub fn copy_selection(&mut self) {
         let (ci, cj) = self.cursor;
         let Some((si, sj)) = self.selection else {
-            return
+            return;
         };
 
         let (xi, xj) = std::cmp::min((si, sj), (ci, cj));
@@ -210,7 +210,7 @@ impl Editor {
     pub fn paste(&mut self) {
         let (i, j) = self.cursor;
         let Some(clipboard) = self.clipboard.clone() else {
-            return
+            return;
         };
 
         if clipboard.len() == 1 {

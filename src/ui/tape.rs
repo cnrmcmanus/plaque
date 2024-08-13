@@ -97,7 +97,7 @@ impl TapeSpace {
     }
 }
 
-fn join_tape_spans<'a>(spans: &mut Vec<Span<'a>>, tape_space: &TapeSpace) -> Spans<'a> {
+fn join_tape_spans<'a>(spans: &mut [Span<'a>], tape_space: &TapeSpace) -> Spans<'a> {
     let len = spans.len();
 
     // remove any overflow from the first and last elements
@@ -109,8 +109,8 @@ fn join_tape_spans<'a>(spans: &mut Vec<Span<'a>>, tape_space: &TapeSpace) -> Spa
         .into();
 
     let joined = spans
-        .clone()
-        .into_iter()
+        .iter()
+        .cloned()
         .intersperse(Span::styled("|", Style::default().fg(EMPTY_COLOR)))
         .collect::<Vec<Span>>();
 
