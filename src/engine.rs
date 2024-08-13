@@ -94,18 +94,14 @@ impl Engine {
                     self.next_instruction()
                 }
             },
-            JumpForward => {
-                if self.cell() == 0 {
-                    self.goto_next(JumpBackward, JumpForward)?;
-                }
-                self.next_instruction()
-            }
-            JumpBackward => {
-                if self.cell() != 0 {
-                    self.goto_prev(JumpForward, JumpBackward)?;
-                }
-                self.next_instruction()
-            }
+            JumpForward => match self.cell() {
+                0 => self.goto_matching_jump(),
+                _ => self.next_instruction(),
+            },
+            JumpBackward => match self.cell() {
+                0 => self.next_instruction(),
+                _ => self.goto_matching_jump(),
+            },
             Breakpoint => {
                 self.next_instruction()?;
                 Exception::Breakpoint.result()
@@ -145,12 +141,12 @@ impl Engine {
                 }
             },
             JumpForward => match self.cell() {
-                0 => self.goto_prev(JumpForward, JumpBackward),
+                0 => self.goto_matching_jump(),
                 _ => self.prev_instruction(),
             },
             JumpBackward => match self.cell() {
                 0 => self.prev_instruction(),
-                _ => self.goto_next(JumpBackward, JumpForward),
+                _ => self.goto_matching_jump(),
             },
             Breakpoint => {
                 self.prev_instruction()?;
@@ -267,58 +263,14 @@ impl Engine {
         }
     }
 
-    pub fn goto_next(&mut self, goto: Instruction, matching: Instruction) -> EngineResult {
+    pub fn goto_matching_jump(&mut self) -> EngineResult {
+        let err = || Exception::error("no matching jump");
         let start = match self.instruction_pointer {
-            InstructionPointer::End => {
-                Exception::error("already at the end of the instruction list").result()
-            }
-            InstructionPointer::Start => Ok(0),
-            InstructionPointer::Index(i) => Ok(i + 1),
-        }?;
-
-        let rest = self.instructions.iter().skip(start);
-        let mut skip = 0;
-        for (i, instruction) in rest.enumerate() {
-            if instruction == &goto {
-                if skip == 0 {
-                    self.instruction_pointer = InstructionPointer::Index(start + i);
-                    return Ok(());
-                } else {
-                    skip -= 1;
-                }
-            } else if instruction == &matching {
-                skip += 1;
-            }
-        }
-
-        Exception::error(format!("no next {} instruction found", goto.symbol())).result()
-    }
-
-    pub fn goto_prev(&mut self, goto: Instruction, matching: Instruction) -> EngineResult {
-        let end = match self.instruction_pointer {
-            InstructionPointer::Start => {
-                Exception::error("already at the start of the instruction list").result()
-            }
-            InstructionPointer::End => Ok(self.instructions.len() - 1),
             InstructionPointer::Index(i) => Ok(i),
+            _ => err().result(),
         }?;
-
-        let rest = self.instructions.iter().take(end);
-        let mut skip = 0;
-        for (i, instruction) in rest.rev().enumerate() {
-            if instruction == &goto {
-                if skip == 0 {
-                    self.instruction_pointer = InstructionPointer::Index(end - i - 1);
-                    return Ok(());
-                } else {
-                    skip -= 1;
-                }
-            } else if instruction == &matching {
-                skip += 1;
-            }
-        }
-
-        Exception::error(format!("no previous {} instruction found", goto.symbol())).result()
+        let i = Instruction::matching_jump(start, &self.instructions).ok_or_else(err)?;
+        self.goto(i)
     }
 
     pub fn next_cell(&mut self) -> EngineResult {
