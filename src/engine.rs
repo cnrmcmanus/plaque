@@ -330,128 +330,47 @@ impl Engine {
 mod tests {
     use super::*;
 
-    const NOOP_A: Instruction = Instruction {
-        symbol: 'a',
-        exec: |_| Ok(()),
-        unexec: |_| Ok(()),
-    };
-    const NOOP_B: Instruction = Instruction {
-        symbol: 'b',
-        exec: |_| Ok(()),
-        unexec: |_| Ok(()),
-    };
-    const NOOP_C: Instruction = Instruction {
-        symbol: 'c',
-        exec: |_| Ok(()),
-        unexec: |_| Ok(()),
-    };
-
     fn ok(result: EngineResult) {
         assert_eq!(result, Ok(()))
     }
 
-    #[test]
-    fn new_builds_blank_program() {
-        let program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C]);
-
-        assert_eq!(
-            program,
-            Engine {
-                tape: vec![0],
-                tape_pointer: 0,
-                instructions: vec![NOOP_A, NOOP_B, NOOP_C],
-                instruction_pointer: InstructionPointer::Start,
-                history: vec![],
-                output: vec![],
-                input: vec![],
-                input_cell_history: vec![],
-            }
-        );
+    fn engine() -> Engine {
+        Engine::new(vec![JumpForward, JumpForward, Increment, JumpBackward])
     }
 
     #[test]
     fn goto_sets_instruction_pointer() {
-        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C]);
-
-        ok(program.goto(1));
-
-        assert_eq!(program.current_instruction(), Some(NOOP_B));
-        assert_eq!(program.instruction_pointer, InstructionPointer::Index(1));
+        let mut engine = engine();
+        ok(engine.goto(2));
+        assert_eq!(engine.current_instruction(), Some(Increment));
+        assert_eq!(engine.instruction_pointer, InstructionPointer::Index(2));
     }
 
     #[test]
     fn goto_overrun_fails_gracefully() {
-        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C]);
-
-        assert!(program.goto(3).is_err());
-        assert_eq!(program.instruction_pointer, InstructionPointer::Start);
+        let mut engine = engine();
+        assert!(engine.goto(4).is_err());
+        assert_eq!(engine.instruction_pointer, InstructionPointer::Start);
     }
 
     #[test]
-    fn goto_next_moves_to_next_instruction() {
-        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C, NOOP_B, NOOP_A, NOOP_C]);
-
-        ok(program.goto(0));
-        ok(program.goto_next(NOOP_C, NOOP_A));
-
-        assert_eq!(program.current_instruction(), Some(NOOP_C));
-        assert_eq!(program.instruction_pointer, InstructionPointer::Index(2));
+    fn goto_matching_sets_instruction_pointer() {
+        let mut engine = engine();
+        ok(engine.goto(1));
+        ok(engine.goto_matching_jump());
+        assert_eq!(engine.current_instruction(), Some(JumpBackward));
+        assert_eq!(engine.instruction_pointer, InstructionPointer::Index(3));
+        ok(engine.goto_matching_jump());
+        assert_eq!(engine.current_instruction(), Some(JumpForward));
+        assert_eq!(engine.instruction_pointer, InstructionPointer::Index(1));
     }
 
     #[test]
-    fn goto_next_matches_nesting() {
-        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_A, NOOP_C, NOOP_B, NOOP_C]);
-
-        ok(program.goto(0));
-        ok(program.goto_next(NOOP_C, NOOP_A));
-
-        assert_eq!(program.current_instruction(), Some(NOOP_C));
-        assert_eq!(program.instruction_pointer, InstructionPointer::Index(5));
-    }
-
-    #[test]
-    fn goto_next_fails_gracefully_on_overrun() {
-        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C, NOOP_A]);
-
-        ok(program.goto(0));
-        ok(program.goto_next(NOOP_C, NOOP_A));
-
-        assert!(program.goto_next(NOOP_C, NOOP_A).is_err());
-        assert_eq!(program.current_instruction(), Some(NOOP_C));
-        assert_eq!(program.instruction_pointer, InstructionPointer::Index(2));
-    }
-
-    #[test]
-    fn goto_prev_moves_to_prev_instruction() {
-        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_C, NOOP_B, NOOP_A, NOOP_C]);
-
-        ok(program.goto(5));
-        ok(program.goto_prev(NOOP_A, NOOP_C));
-
-        assert_eq!(program.current_instruction(), Some(NOOP_A));
-        assert_eq!(program.instruction_pointer, InstructionPointer::Index(4));
-    }
-
-    #[test]
-    fn goto_prev_nmatches_nesting() {
-        let mut program = Engine::new(vec![NOOP_A, NOOP_B, NOOP_A, NOOP_C, NOOP_B, NOOP_C]);
-
-        ok(program.goto(5));
-        ok(program.goto_prev(NOOP_A, NOOP_C));
-
-        assert_eq!(program.current_instruction(), Some(NOOP_A));
-        assert_eq!(program.instruction_pointer, InstructionPointer::Index(0));
-    }
-
-    #[test]
-    fn goto_prev_fails_gracefully_on_underrun() {
-        let mut program = Engine::new(vec![NOOP_C, NOOP_A, NOOP_B, NOOP_C]);
-
-        ok(program.goto(3));
-        ok(program.goto_prev(NOOP_A, NOOP_C));
-
-        assert!(program.goto_prev(NOOP_A, NOOP_C).is_err());
-        assert_eq!(program.current_instruction(), Some(NOOP_A));
-        assert_eq!(program.instruction_pointer, InstructionPointer::Index(1));
+    fn goto_matching_fails_gracefully_on_overrun() {
+        let mut engine = engine();
+        ok(engine.goto(0));
+        assert!(engine.goto_matching_jump().is_err());
+        assert_eq!(engine.current_instruction(), Some(JumpForward));
+        assert_eq!(engine.instruction_pointer, InstructionPointer::Index(0));
     }
 }
