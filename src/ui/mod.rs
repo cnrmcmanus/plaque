@@ -3,18 +3,17 @@ mod help;
 mod io;
 mod tape;
 
-use tui::{
-    backend::Backend,
-    layout::{Constraint, Direction, Layout, Rect},
+use ratatui::{
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    terminal::Frame,
     widgets::Paragraph,
+    Frame,
 };
 
 use crate::program::Program;
 
-pub fn draw<B: Backend>(program: &mut Program, frame: &mut Frame<B>) {
-    let size = frame.size();
+pub fn draw(program: &mut Program, frame: &mut Frame) {
+    let size = frame.area();
 
     let window = Layout::default()
         .direction(Direction::Vertical)
@@ -43,7 +42,7 @@ pub fn draw<B: Backend>(program: &mut Program, frame: &mut Frame<B>) {
     help::render(frame, window[3], program.mode);
 }
 
-fn render_filename<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
+fn render_filename(frame: &mut Frame, area: Rect, program: &Program) {
     let filename = program
         .editor
         .filepath
@@ -57,14 +56,12 @@ fn render_filename<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Progr
         title.push('*');
     }
 
-    let paragraph = Paragraph::new(title)
-        .alignment(tui::layout::Alignment::Center)
-        .style(
-            Style::default()
-                .bg(Color::Rgb(200, 200, 200))
-                .fg(Color::Rgb(50, 50, 50))
-                .add_modifier(Modifier::BOLD),
-        );
+    let paragraph = Paragraph::new(title).alignment(Alignment::Center).style(
+        Style::default()
+            .bg(Color::Rgb(200, 200, 200))
+            .fg(Color::Rgb(50, 50, 50))
+            .add_modifier(Modifier::BOLD),
+    );
 
     frame.render_widget(paragraph, area);
 }

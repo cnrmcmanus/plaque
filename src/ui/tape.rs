@@ -1,10 +1,9 @@
-use tui::{
-    backend::Backend,
+use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
-    terminal::Frame,
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
+    Frame,
 };
 
 use crate::program::Program;
@@ -13,10 +12,10 @@ const CELL_COLOR: Color = Color::Rgb(255, 255, 255);
 const INDEX_COLOR: Color = Color::Rgb(150, 150, 150);
 const EMPTY_COLOR: Color = Color::Rgb(80, 80, 80);
 
-pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
+pub fn render(frame: &mut Frame, area: Rect, program: &Program) {
     let tape_pointer = program.engine.tape_pointer;
     let tape_length = program.engine.tape.len();
-    let tape_space = TapeSpace::new(frame.size().width as usize - 2, tape_pointer, tape_length);
+    let tape_space = TapeSpace::new(frame.area().width as usize - 2, tape_pointer, tape_length);
     let right_slots = tape_space.used_right_slots + tape_space.unused_right_slots;
 
     let cell_style = Style::default().fg(CELL_COLOR);
@@ -48,7 +47,7 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
         .collect::<Vec<Span>>();
 
     let text = vec![
-        Spans::from("\u{25BC}"),
+        Line::from("\u{25BC}"),
         join_tape_spans(cells.as_mut(), &tape_space),
         join_tape_spans(indexes.as_mut(), &tape_space),
     ];
@@ -97,7 +96,7 @@ impl TapeSpace {
     }
 }
 
-fn join_tape_spans<'a>(spans: &mut [Span<'a>], tape_space: &TapeSpace) -> Spans<'a> {
+fn join_tape_spans<'a>(spans: &mut [Span<'a>], tape_space: &TapeSpace) -> Line<'a> {
     let len = spans.len();
 
     // remove any overflow from the first and last elements
@@ -114,7 +113,7 @@ fn join_tape_spans<'a>(spans: &mut [Span<'a>], tape_space: &TapeSpace) -> Spans<
         .intersperse(Span::styled("|", Style::default().fg(EMPTY_COLOR)))
         .collect::<Vec<Span>>();
 
-    Spans::from(joined)
+    Line::from(joined)
 }
 
 #[cfg(test)]

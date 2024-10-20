@@ -1,16 +1,15 @@
-use std::iter;
-use tui::{
-    backend::Backend,
+use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
-    terminal::Frame,
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
+    Frame,
 };
+use std::iter;
 
 use crate::program::Program;
 
-pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &mut Program) {
+pub fn render(frame: &mut Frame, area: Rect, program: &mut Program) {
     let cursor_style = Style::default()
         .bg(Color::Rgb(200, 200, 200))
         .fg(Color::Rgb(50, 50, 50));
@@ -62,7 +61,7 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &mut Progra
             )
             .collect::<Vec<_>>();
 
-            Spans::from(spans)
+            Line::from(spans)
         })
         .collect::<Vec<_>>();
 

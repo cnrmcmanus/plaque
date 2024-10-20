@@ -1,17 +1,16 @@
-use tui::{
-    backend::Backend,
+use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    terminal::Frame,
-    text::{Span, Spans, Text},
+    text::{Line, Span, Text},
     widgets::{Block, Borders, Paragraph, Wrap},
+    Frame,
 };
 
 use crate::program::{Mode, Program};
 
 const NEWLINE_COLOR: Color = Color::Rgb(80, 80, 80);
 
-pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
+pub fn render(frame: &mut Frame, area: Rect, program: &Program) {
     let input_output_height = area.height - 6;
     let output_height = input_output_height / 2;
     let input_height = input_output_height - output_height;
@@ -44,12 +43,12 @@ fn io_text(buffer: &[u8]) -> Text {
         // add line ending marker B6 to each line except the last
         .map(|(i, line)| {
             if i != newlines {
-                Spans::from(vec![
+                Line::from(vec![
                     Span::from(line),
                     Span::styled("\u{B6}", Style::default().fg(NEWLINE_COLOR)),
                 ])
             } else {
-                Spans::from(vec![Span::from(line)])
+                Line::from(vec![Span::from(line)])
             }
         })
         .collect::<Vec<_>>();
@@ -57,7 +56,7 @@ fn io_text(buffer: &[u8]) -> Text {
     Text::from(lines)
 }
 
-pub fn render_input<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
+pub fn render_input(frame: &mut Frame, area: Rect, program: &Program) {
     let text = match program.mode {
         Mode::Input => &program.input_buffer,
         _ => &program.engine.input,
@@ -69,7 +68,7 @@ pub fn render_input<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Prog
     frame.render_widget(input, area);
 }
 
-pub fn render_output<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
+pub fn render_output(frame: &mut Frame, area: Rect, program: &Program) {
     let output = Paragraph::new(io_text(&program.engine.output))
         .block(Block::default().title("Output").borders(Borders::ALL))
         .wrap(Wrap { trim: false });
@@ -77,12 +76,12 @@ pub fn render_output<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Pro
     frame.render_widget(output, area);
 }
 
-fn render_debug<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
+fn render_debug(frame: &mut Frame, area: Rect, program: &Program) {
     let lines = program
         .debug_messages
         .iter()
         .rev()
-        .map(|message| Spans::from(vec![Span::raw(message)]))
+        .map(|message| Line::from(vec![Span::raw(message)]))
         .collect::<Vec<_>>();
 
     let debug = Paragraph::new(lines).block(Block::default().title("Debug").borders(Borders::ALL));

@@ -6,6 +6,7 @@ use anyhow::Result;
 use crossterm::event::{self, Event as CEvent, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::execute;
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
+use ratatui::{backend::CrosstermBackend, Terminal};
 use std::sync::{
     mpsc,
     mpsc::{Receiver, Sender},
@@ -13,7 +14,6 @@ use std::sync::{
 };
 use std::thread;
 use std::time::Duration;
-use tui::{backend::CrosstermBackend, Terminal};
 
 type SharedState = Arc<Mutex<Program>>;
 

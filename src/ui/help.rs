@@ -1,11 +1,10 @@
-use std::cmp::max;
-use tui::{
-    backend::Backend,
+use ratatui::{
     layout::{Constraint, Rect},
-    terminal::Frame,
     text::Span,
     widgets::{Block, Borders, Cell, Row, Table},
+    Frame,
 };
+use std::cmp::max;
 
 use crate::program::Mode;
 
@@ -28,7 +27,7 @@ impl HelpItem<'_> {
     }
 }
 
-pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
+pub fn render(frame: &mut Frame, area: Rect, mode: Mode) {
     let height = 3;
 
     let title = format!(
@@ -100,9 +99,8 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, mode: Mode) {
         )
     });
 
-    let table = Table::new(rows)
+    let table = Table::new(rows, &widths)
         .block(Block::default().borders(Borders::ALL).title(title))
-        .widths(&widths)
         .column_spacing(2);
 
     frame.render_widget(table, area);
