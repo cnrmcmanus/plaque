@@ -10,7 +10,7 @@ use tui::{
 
 use crate::program::Program;
 
-pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
+pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &mut Program) {
     let cursor_style = Style::default()
         .bg(Color::Rgb(200, 200, 200))
         .fg(Color::Rgb(50, 50, 50));
@@ -19,14 +19,23 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
     let code_style = Style::default();
     let comment_style = Style::default().fg(Color::Rgb(150, 150, 150));
 
+    let height = area.height - 2;
+    program.editor.set_window_height(height as usize);
+    let end_line = std::cmp::min(
+        program.editor.window_top_line + program.editor.window_height,
+        program.editor.lines.len(),
+    );
     let line_count = program.editor.lines.len();
     let line_count_digits = (line_count.checked_ilog10().unwrap_or(0) + 1) as usize;
     let text = program
         .editor
         .lines
         .iter()
+        .skip(program.editor.window_top_line)
+        .take(end_line - program.editor.window_top_line)
         .enumerate()
         .map(|(i, line)| {
+            let i = program.editor.window_top_line + i;
             let spans = iter::once(Span::styled(
                 format!("{:0>line_count_digits$} ", i + 1),
                 comment_style,
@@ -57,11 +66,7 @@ pub fn render<B: Backend>(frame: &mut Frame<B>, area: Rect, program: &Program) {
         })
         .collect::<Vec<_>>();
 
-    let height = area.height - 2;
-    let page = program.editor.cursor.0 as u16 / height;
-    let program = Paragraph::new(text)
-        .block(Block::default().borders(Borders::ALL))
-        .scroll((page * height, 0));
+    let program = Paragraph::new(text).block(Block::default().borders(Borders::ALL));
 
     frame.render_widget(program, area);
 }

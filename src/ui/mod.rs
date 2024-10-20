@@ -13,7 +13,7 @@ use tui::{
 
 use crate::program::Program;
 
-pub fn draw<B: Backend>(program: &Program, frame: &mut Frame<B>) {
+pub fn draw<B: Backend>(program: &mut Program, frame: &mut Frame<B>) {
     let size = frame.size();
 
     let window = Layout::default()

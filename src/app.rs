@@ -163,8 +163,8 @@ pub fn ui_loop(shared_state: SharedState, rx_ui: Receiver<()>) -> Result<()> {
 
     loop {
         terminal.draw(|frame| {
-            let guard = shared_state.lock().unwrap();
-            ui::draw(&guard, frame);
+            let mut guard = shared_state.lock().unwrap();
+            ui::draw(&mut guard, frame);
             drop(guard);
         })?;
 

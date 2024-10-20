@@ -7,6 +7,8 @@ pub struct Editor {
     pub cursor: (usize, usize),
     pub selection: Option<(usize, usize)>,
     pub clipboard: Option<Vec<String>>,
+    pub window_height: usize,
+    pub window_top_line: usize,
     pub pinned_col: usize,
     pub dirty: bool,
 }
@@ -27,6 +29,8 @@ impl Editor {
             cursor: (0, 0),
             selection: None,
             clipboard: None,
+            window_height: 1,
+            window_top_line: 0,
             pinned_col: 0,
             dirty: false,
         }
@@ -72,6 +76,7 @@ impl Editor {
         self.lines.insert(row + 1, line);
         self.set_pinned_cursor(row + 1, 0);
         self.dirty = true;
+        self.scroll_into_view();
     }
 
     pub fn backward_delete(&mut self) {
@@ -93,6 +98,7 @@ impl Editor {
             self.set_pinned_cursor(row - 1, prev_line_len);
             self.dirty = true;
         }
+        self.scroll_into_view();
     }
 
     pub fn forward_delete(&mut self) {
@@ -109,6 +115,7 @@ impl Editor {
             self.lines[row] += &next_line;
             self.dirty = true;
         }
+        self.scroll_into_view();
     }
 
     pub fn set_pinned_cursor(&mut self, row: usize, col: usize) {
@@ -127,16 +134,22 @@ impl Editor {
 
         match cursor_move {
             CursorMove::Up => {
-                if row > 0 {
-                    let clamped_col = std::cmp::min(self.pinned_col, self.line_chars(row - 1));
-                    self.cursor = (row - 1, clamped_col);
+                if row == 0 {
+                    return;
                 }
+                let row = row - 1;
+                let clamped_col = std::cmp::min(self.pinned_col, self.line_chars(row));
+                self.cursor = (row, clamped_col);
+                self.scroll_into_view();
             }
             CursorMove::Down => {
-                if row < self.lines.len() - 1 {
-                    let clamped_col = std::cmp::min(self.pinned_col, self.line_chars(row + 1));
-                    self.cursor = (row + 1, clamped_col);
+                if row >= self.lines.len() - 1 {
+                    return;
                 }
+                let row = row + 1;
+                let clamped_col = std::cmp::min(self.pinned_col, self.line_chars(row));
+                self.cursor = (row, clamped_col);
+                self.scroll_into_view();
             }
             CursorMove::Left => {
                 if col > 0 {
@@ -179,6 +192,7 @@ impl Editor {
             let end = self.lines.remove(xi + 1);
             self.lines[xi] += &end;
         }
+        self.scroll_into_view();
     }
 
     pub fn copy_selection(&mut self) {
@@ -223,6 +237,7 @@ impl Editor {
             self.lines.splice(i + 1..i + 1, clipboard[1..len].to_vec());
             self.lines[i + len - 1] += &end;
         }
+        self.scroll_into_view();
     }
 
     pub fn indent(&mut self) {
@@ -267,6 +282,24 @@ impl Editor {
             (ci, cj) <= (i, j) && (i, j) < (si, sj)
         } else {
             (si, sj) <= (i, j) && (i, j) < (ci, cj)
+        }
+    }
+
+    pub fn set_window_height(&mut self, height: usize) {
+        self.window_height = height;
+    }
+
+    pub fn scroll_into_view(&mut self) {
+        let (row, _) = self.cursor;
+        let half_window_height = self.window_height / 2;
+        if row >= self.window_top_line + self.window_height {
+            self.window_top_line = row - half_window_height;
+        } else if row < self.window_top_line {
+            self.window_top_line = if half_window_height <= row {
+                row - half_window_height
+            } else {
+                0
+            }
         }
     }
 }
