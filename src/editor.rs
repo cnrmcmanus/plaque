@@ -295,11 +295,7 @@ impl Editor {
         if row >= self.window_top_line + self.window_height {
             self.window_top_line = row - half_window_height;
         } else if row < self.window_top_line {
-            self.window_top_line = if half_window_height <= row {
-                row - half_window_height
-            } else {
-                0
-            }
+            self.window_top_line = row.saturating_sub(half_window_height);
         }
     }
 }
