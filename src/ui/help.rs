@@ -33,23 +33,12 @@ pub fn render(frame: &mut Frame, area: Rect, mode: Mode) {
     let title = format!(
         "Help ({})",
         match mode {
-            Mode::Interactive => "interactive mode",
             Mode::Editor => "editor mode",
             Mode::Input => "input mode",
         }
     );
 
     let help_items: Vec<HelpItem> = match mode {
-        Mode::Interactive => vec![
-            HelpItem::new("→", "Step"),
-            HelpItem::new("←", "Undo"),
-            HelpItem::new("space", "Play/Pause"),
-            HelpItem::new("↓", "Step to Breakpoint"),
-            HelpItem::new("↑", "Undo to Breakpoint"),
-            HelpItem::new("e", "Editor Mode"),
-            HelpItem::new("x", "Reset"),
-            HelpItem::new("esc/q", "Quit"),
-        ],
         Mode::Editor => vec![
             HelpItem::new("esc", "Done"),
             HelpItem::new("↑↓←→", "Move Cursor"),

@@ -8,7 +8,6 @@ use tap::prelude::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Mode {
-    Interactive,
     Editor,
     Input,
 }
@@ -30,7 +29,7 @@ impl Program {
             engine: Engine::new(vec![]),
             editor: Editor::new(),
             instruction_positions: vec![],
-            mode: Mode::Interactive,
+            mode: Mode::Editor,
             input_buffer: vec![],
             stdin: None,
             debug_messages: vec![],
@@ -135,10 +134,6 @@ impl Program {
         self.step().ok();
     }
 
-    pub fn is_interactive_mode(&self) -> bool {
-        self.mode == Mode::Interactive
-    }
-
     pub fn is_editor_mode(&self) -> bool {
         self.mode == Mode::Editor
     }
@@ -167,7 +162,7 @@ impl Program {
     }
 
     pub fn exit_input_mode(&mut self, commit: bool) {
-        self.mode = Mode::Interactive;
+        self.mode = Mode::Editor;
         if commit {
             self.engine.input = self.input_buffer.clone();
         }

@@ -51,30 +51,6 @@ pub fn spawn_program_thread(
             let shift = event.modifiers.contains(KeyModifiers::SHIFT);
 
             match program.mode {
-                Mode::Interactive => match event.code {
-                    KeyCode::Char('e') => {
-                        program.mode = Mode::Editor;
-                    }
-                    KeyCode::Char('x') => {
-                        program.reset();
-                    }
-                    KeyCode::Esc | KeyCode::Char('q') => {
-                        tx_ui.send(()).unwrap();
-                    }
-                    KeyCode::Right => {
-                        program.step().ok();
-                    }
-                    KeyCode::Left => {
-                        program.undo().ok();
-                    }
-                    KeyCode::Down => {
-                        program.step_until_exception();
-                    }
-                    KeyCode::Up => {
-                        program.undo_until_exception();
-                    }
-                    _ => {}
-                },
                 Mode::Editor => match event.code {
                     KeyCode::Char('r') if control => {
                         program.reset();
@@ -130,7 +106,7 @@ pub fn spawn_program_thread(
                         program.index_instructions();
                     }
                     KeyCode::Esc => {
-                        program.mode = Mode::Interactive;
+                        tx_ui.send(()).unwrap();
                     }
                     _ => {}
                 },
