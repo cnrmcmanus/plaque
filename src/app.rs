@@ -28,12 +28,9 @@ pub fn run(program: Program) -> Result<()> {
 }
 
 pub fn spawn_input_thread(tx_program: Sender<KeyEvent>) {
-    let tick_rate = Duration::from_millis(50);
     thread::spawn(move || loop {
-        if event::poll(tick_rate).unwrap() {
-            if let CEvent::Key(key) = event::read().unwrap() {
-                tx_program.send(key).unwrap();
-            }
+        if let CEvent::Key(key) = event::read().unwrap() {
+            tx_program.send(key).unwrap();
         }
     });
 }
