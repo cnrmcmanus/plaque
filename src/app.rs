@@ -29,10 +29,35 @@ pub fn run(program: Program) -> Result<()> {
 
 pub fn spawn_input_thread(tx_program: Sender<KeyEvent>) {
     thread::spawn(move || loop {
-        if let CEvent::Key(key) = event::read().unwrap() {
+        if let CEvent::Key(mut key) = event::read().unwrap() {
+            // workaround for iterm2 as ctrl+arrow is not registered
+            // map option+arrow, which uses escape keys, to ctrl+arrow
+            if let KeyCode::Esc = key.code {
+                if let &[KeyCode::Char('['), KeyCode::Char(key_code)] =
+                    read_buffered_keys().as_slice()
+                {
+                    key.modifiers = KeyModifiers::CONTROL;
+                    key.code = match key_code {
+                        'A' => KeyCode::Up,
+                        'B' => KeyCode::Down,
+                        'C' => KeyCode::Right,
+                        _ => KeyCode::Left,
+                    }
+                }
+            }
             tx_program.send(key).unwrap();
         }
     });
+}
+
+fn read_buffered_keys() -> Vec<KeyCode> {
+    let mut keys = Vec::with_capacity(3);
+    while event::poll(Duration::from_millis(0)).unwrap() {
+        if let CEvent::Key(key) = event::read().unwrap() {
+            keys.push(key.code);
+        }
+    }
+    keys
 }
 
 pub fn spawn_program_thread(
